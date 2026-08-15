@@ -10,7 +10,7 @@ class PropertyPhoto extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['path', 'is_main', 'sort_order'];
+    protected $fillable = ['photoable_type', 'photoable_id', 'path', 'is_main', 'sort_order'];
 
     protected $casts = [
         'is_main' => 'boolean',
