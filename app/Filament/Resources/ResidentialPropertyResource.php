@@ -44,7 +44,13 @@ class ResidentialPropertyResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('address')->label('Адрес')->searchable()->limit(40),
-                Tables\Columns\TextColumn::make('deal_type')->label('Сделка')->badge(),
+                Tables\Columns\TextColumn::make('deal_type')
+                    ->label('Сделка')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state) => ResidentialProperty::dealTypeLabels()[$state] ?? $state),
+                Tables\Columns\TextColumn::make('property_type')
+                    ->label('Тип')
+                    ->formatStateUsing(fn (string $state) => ResidentialProperty::propertyTypeLabels()[$state] ?? $state),
                 Tables\Columns\TextColumn::make('price')->label('Цена')->money('rub'),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Статус')
