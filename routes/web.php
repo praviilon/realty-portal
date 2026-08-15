@@ -14,6 +14,12 @@ Route::get('/catalog', CatalogSearch::class)->name('residential.search');
 
 Route::get('/catalog/{residentialProperty}', ResidentialPropertyShow::class)->name('residential.show');
 
+// Эпик 12: правовая информация и помощь (статичные страницы).
+Route::view('/about', 'about')->name('about');
+Route::view('/help', 'help')->name('help');
+Route::view('/legal/terms', 'legal.terms')->name('legal.terms');
+Route::view('/legal/privacy', 'legal.privacy')->name('legal.privacy');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/account/listings/create', ResidentialPropertyWizard::class)->name('residential.create');
     Route::get('/account/listings/{residentialProperty}/edit', ResidentialPropertyWizard::class)->name('residential.edit');

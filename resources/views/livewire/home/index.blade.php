@@ -56,7 +56,7 @@
 
     <!-- FAQ -->
     @if ($faqsByCategory->isNotEmpty())
-        <div class="bg-white border-t border-gray-100">
+        <div id="faq" class="bg-white border-t border-gray-100">
             <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <h2 class="text-xl font-bold text-gray-900 mb-6">Часто задаваемые вопросы</h2>
 
