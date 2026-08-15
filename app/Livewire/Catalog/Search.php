@@ -17,6 +17,9 @@ class Search extends Component
     public string $dealType = 'sale'; // sale | rent
 
     #[Url]
+    public string $propertyType = ''; // '' | apartment | house | room | studio
+
+    #[Url]
     public ?int $priceMin = null;
 
     #[Url]
@@ -24,9 +27,15 @@ class Search extends Component
 
     public function updated($property): void
     {
-        if (in_array($property, ['dealType', 'priceMin', 'priceMax'])) {
+        if (in_array($property, ['dealType', 'propertyType', 'priceMin', 'priceMax'])) {
             $this->resetPage();
         }
+    }
+
+    public function resetFilters(): void
+    {
+        $this->reset(['propertyType', 'priceMin', 'priceMax']);
+        $this->resetPage();
     }
 
     public function render()
@@ -34,11 +43,15 @@ class Search extends Component
         $listings = ResidentialProperty::query()
             ->active()
             ->where('deal_type', $this->dealType)
+            ->when($this->propertyType, fn ($q) => $q->where('property_type', $this->propertyType))
             ->when($this->priceMin, fn ($q) => $q->where('price', '>=', $this->priceMin))
             ->when($this->priceMax, fn ($q) => $q->where('price', '<=', $this->priceMax))
             ->latest()
-            ->paginate(10);
+            ->paginate(12);
 
-        return view('livewire.catalog.search', ['listings' => $listings]);
+        return view('livewire.catalog.search', [
+            'listings' => $listings,
+            'propertyTypeLabels' => ResidentialProperty::propertyTypeLabels(),
+        ]);
     }
 }

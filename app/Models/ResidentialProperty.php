@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class ResidentialProperty extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'deal_type',
@@ -23,6 +26,7 @@ class ResidentialProperty extends Model
         'description',
         'status',
         'rejection_reason',
+        'views_count',
     ];
 
     protected $casts = [
@@ -43,5 +47,33 @@ class ResidentialProperty extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');
+    }
+
+    public static function dealTypeLabels(): array
+    {
+        return [
+            'sale' => 'Продажа',
+            'rent' => 'Аренда',
+        ];
+    }
+
+    public static function propertyTypeLabels(): array
+    {
+        return [
+            'apartment' => 'Квартира',
+            'house' => 'Дом',
+            'room' => 'Комната',
+            'studio' => 'Студия',
+        ];
+    }
+
+    public function getDealTypeLabelAttribute(): string
+    {
+        return self::dealTypeLabels()[$this->deal_type] ?? $this->deal_type;
+    }
+
+    public function getPropertyTypeLabelAttribute(): string
+    {
+        return self::propertyTypeLabels()[$this->property_type] ?? $this->property_type;
     }
 }
