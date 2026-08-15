@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -13,10 +14,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 #[Fillable(['first_name', 'last_name', 'email', 'phone', 'password', 'avatar_path', 'role', 'name'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser, HasName
+class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -59,6 +61,15 @@ class User extends Authenticatable implements FilamentUser, HasName
     public function getFilamentName(): string
     {
         return $this->full_name;
+    }
+
+    /**
+     * Аватар пользователя для интерфейса Filament — эпик 9 дорожной карты
+     * (Intervention Image, серверный ресайз в квадрат 256×256 WebP).
+     */
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->avatar_path ? Storage::url($this->avatar_path) : null;
     }
 
     /**
