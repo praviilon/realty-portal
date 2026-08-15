@@ -2,15 +2,15 @@
 
 namespace App\Livewire\Property;
 
+use App\Models\Chat;
 use App\Models\ResidentialProperty;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
  * Детальная карточка объявления (жилая недвижимость) — эпик 6 дорожной карты.
- *
- * Кнопка "Написать продавцу" — заглушка: сама переписка появится в эпике 10
- * (Чаты между пользователями), пока рано на неё ссылаться.
+ * Кнопка "Написать продавцу" ведёт в чат — эпик 10 дорожной карты.
  */
 #[Layout('layouts.app')]
 class Show extends Component
@@ -45,6 +45,13 @@ class Show extends Component
 
         session()->put($sessionKey, true);
         $this->listing->increment('views_count');
+    }
+
+    public function startChat()
+    {
+        $chat = Chat::findOrCreateFor(Auth::user(), $this->listing);
+
+        return $this->redirect(route('chat.show', $chat), navigate: true);
     }
 
     public function render()

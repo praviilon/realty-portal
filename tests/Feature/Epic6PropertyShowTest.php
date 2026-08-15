@@ -23,7 +23,9 @@ class Epic6PropertyShowTest extends TestCase
             'area' => 54,
         ]);
 
-        $response = $this->get(route('residential.show', $listing));
+        $buyer = User::factory()->create();
+
+        $response = $this->actingAs($buyer)->get(route('residential.show', $listing));
 
         $response->assertStatus(200)
             ->assertSee('ул. Примерная, 10')

@@ -37,6 +37,9 @@ new class extends Component
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                             {{ __('Личный кабинет') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('chat.index')" :active="request()->routeIs('chat.*')" wire:navigate>
+                            {{ __('Сообщения') }}
+                        </x-nav-link>
                     @endauth
                 </div>
             </div>
@@ -102,6 +105,9 @@ new class extends Component
             @auth
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                     {{ __('Личный кабинет') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('chat.index')" :active="request()->routeIs('chat.*')" wire:navigate>
+                    {{ __('Сообщения') }}
                 </x-responsive-nav-link>
             @endauth
         </div>

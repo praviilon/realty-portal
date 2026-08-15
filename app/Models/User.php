@@ -50,6 +50,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
         return $this->hasMany(ResidentialProperty::class);
     }
 
+    public function chatsAsBuyer(): HasMany
+    {
+        return $this->hasMany(Chat::class, 'buyer_id');
+    }
+
+    public function chatsAsSeller(): HasMany
+    {
+        return $this->hasMany(Chat::class, 'seller_id');
+    }
+
     public function getFullNameAttribute(): string
     {
         return trim($this->first_name . ' ' . $this->last_name);

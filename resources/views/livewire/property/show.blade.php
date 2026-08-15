@@ -69,12 +69,17 @@
                     <div class="font-medium">{{ $listing->user->full_name }}</div>
                     <div class="text-sm text-gray-500">На сайте с {{ $listing->user->created_at->format('m.Y') }}</div>
 
-                    <button type="button" disabled
-                            title="Чат с продавцом появится в следующем эпике дорожной карты"
-                            class="mt-4 w-full inline-flex justify-center items-center px-4 py-2 bg-gray-300 text-gray-500 rounded-md font-semibold text-xs uppercase tracking-widest cursor-not-allowed">
-                        Написать продавцу
-                    </button>
-                    <p class="mt-2 text-xs text-gray-400">Функция чата появится позже (эпик 10 дорожной карты).</p>
+                    @auth
+                        @if (auth()->id() !== $listing->user_id)
+                            <x-primary-button type="button" wire:click="startChat" class="mt-4 w-full justify-center">
+                                Написать продавцу
+                            </x-primary-button>
+                        @endif
+                    @else
+                        <a href="{{ route('login') }}" wire:navigate class="mt-4 block text-center w-full px-4 py-2 bg-gray-800 text-white rounded-md font-semibold text-xs uppercase tracking-widest hover:bg-gray-700">
+                            Войти, чтобы написать
+                        </a>
+                    @endauth
                 </div>
             </div>
         </div>
