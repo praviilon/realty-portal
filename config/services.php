@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    // Раздел 7.5 технического плана: ключи получаются на developer.tech.yandex.ru.
+    'yandex_maps' => [
+        'api_key' => env('YANDEX_MAPS_API_KEY'),
+    ],
+
+    'smartcaptcha' => [
+        'site_key' => env('SMARTCAPTCHA_SITE_KEY'),
+        'server_key' => env('SMARTCAPTCHA_SERVER_KEY'),
+    ],
+
 ];

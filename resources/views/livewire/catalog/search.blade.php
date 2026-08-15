@@ -36,9 +36,26 @@
             </div>
         </div>
 
-        <div class="text-sm text-gray-500 mb-4">
-            Найдено объявлений: {{ $listings->total() }}
+        <div class="flex items-center justify-between mb-4">
+            <div class="text-sm text-gray-500">
+                Найдено объявлений: {{ $listings->total() }}
+            </div>
+
+            <div class="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm">
+                <button type="button" wire:click="$set('view', 'list')"
+                        class="px-3 py-1.5 {{ $view === 'list' ? 'bg-gray-800 text-white' : 'bg-white text-gray-600' }}">
+                    Список
+                </button>
+                <button type="button" wire:click="$set('view', 'map')"
+                        class="px-3 py-1.5 {{ $view === 'map' ? 'bg-gray-800 text-white' : 'bg-white text-gray-600' }}">
+                    Карта
+                </button>
+            </div>
         </div>
+
+        @if ($view === 'map')
+            <x-yandex-map :pins="$pins" class="mb-6" />
+        @endif
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" wire:loading.class="opacity-50">
             @forelse ($listings as $listing)
