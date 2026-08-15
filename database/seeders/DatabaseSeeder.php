@@ -18,8 +18,11 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         User::factory()->create([
-            'name' => 'Test User',
+            'first_name' => 'Тест',
+            'last_name' => 'Пользователь',
             'email' => 'test@example.com',
         ]);
+
+        $this->call(FaqSeeder::class);
     }
 }

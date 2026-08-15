@@ -1,10 +1,11 @@
 <?php
 
 use App\Livewire\Catalog\Search as CatalogSearch;
+use App\Livewire\Home\Index as HomePage;
 use App\Livewire\Property\Show as ResidentialPropertyShow;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+Route::get('/', HomePage::class)->name('home');
 
 Route::get('/catalog', CatalogSearch::class)->name('residential.search');
 
