@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ResidentialPropertyResource\Pages;
 use App\Models\ResidentialProperty;
+use App\Notifications\ListingStatusChanged;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -81,7 +82,10 @@ class ResidentialPropertyResource extends Resource
                     ->icon('heroicon-o-check')
                     ->requiresConfirmation()
                     ->visible(fn (ResidentialProperty $record) => $record->status === 'moderation')
-                    ->action(fn (ResidentialProperty $record) => $record->update(['status' => 'active'])),
+                    ->action(function (ResidentialProperty $record) {
+                        $record->update(['status' => 'active']);
+                        $record->user->notify(new ListingStatusChanged($record));
+                    }),
                 Tables\Actions\Action::make('reject')
                     ->label('Отклонить')
                     ->color('danger')
@@ -95,6 +99,7 @@ class ResidentialPropertyResource extends Resource
                             'status' => 'rejected',
                             'rejection_reason' => $data['rejection_reason'],
                         ]);
+                        $record->user->notify(new ListingStatusChanged($record));
                     }),
                 Tables\Actions\EditAction::make(),
             ])

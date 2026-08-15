@@ -4,6 +4,7 @@ namespace App\Livewire\Chat;
 
 use App\Models\Chat;
 use App\Models\Message;
+use App\Notifications\NewChatMessage;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -43,11 +44,13 @@ class Thread extends Component
             'text' => ['required', 'string', 'max:2000'],
         ]);
 
-        Message::create([
+        $message = Message::create([
             'chat_id' => $this->chat->id,
             'sender_id' => Auth::id(),
             'text' => $this->text,
         ]);
+
+        $this->chat->otherParticipant(Auth::id())->notify(new NewChatMessage($message));
 
         $this->reset('text');
     }
