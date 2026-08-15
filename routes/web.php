@@ -10,8 +10,9 @@ Route::get('/catalog', CatalogSearch::class)->name('residential.search');
 // TODO (эпик "Детальная карточка объявления", Веха 1, п.6):
 // Route::get('/catalog/{residentialProperty}', ResidentialPropertyShow::class)->name('residential.show');
 
+// Без middleware 'verified' — email/телефон не подтверждаются (см. раздел 5 плана).
 Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth'])
     ->name('dashboard');
 
 Route::view('profile', 'profile')
