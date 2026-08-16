@@ -29,12 +29,13 @@ new #[Layout('layouts.guest')] class extends Component
             'first_name' => ['required', new RussianName()],
             'last_name' => ['nullable', new RussianName()],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'phone' => ['required', 'string', new RussianPhone(), 'unique:'.User::class],
+            'phone' => ['nullable', 'string', new RussianPhone(), 'unique:'.User::class],
             'password' => ['required', 'string', 'confirmed', new PasswordPolicy()],
         ]);
 
         $validated['first_name'] = NameFormatter::capitalize($validated['first_name']);
         $validated['last_name'] = NameFormatter::capitalize($validated['last_name'] ?? null);
+        $validated['phone'] = $validated['phone'] !== '' ? $validated['phone'] : null;
         $validated['password'] = Hash::make($validated['password']);
         $validated['role'] = 'user';
 
@@ -71,8 +72,8 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Phone -->
         <div class="mt-4">
-            <x-input-label for="phone" :value="__('Телефон')" />
-            <x-text-input wire:model="phone" id="phone" class="block mt-1 w-full" type="text" name="phone" required placeholder="+7 (___) ___-__-__" autocomplete="tel" />
+            <x-input-label for="phone" :value="__('Телефон (необязательно)')" />
+            <x-text-input wire:model="phone" x-mask="'+7 (999) 999-99-99'" id="phone" class="block mt-1 w-full" type="tel" name="phone" placeholder="+7 (___) ___-__-__" autocomplete="tel" />
             <x-input-error :messages="$errors->get('phone')" class="mt-2" />
         </div>
 

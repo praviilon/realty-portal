@@ -118,4 +118,30 @@ class Epic9ProfileAvatarTest extends TestCase
         $this->assertSame('maria@example.com', $user->email);
         $this->assertSame('+7 (902) 111-22-33', $user->phone);
     }
+
+    public function test_user_can_remove_phone_number_by_clearing_the_field(): void
+    {
+        $user = User::factory()->create(['phone' => '+7 (902) 111-22-33']);
+
+        Livewire::actingAs($user)
+            ->test('profile.update-profile-information-form')
+            ->set('phone', '')
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $this->assertNull($user->refresh()->phone);
+    }
+
+    public function test_user_can_update_profile_without_a_phone_number(): void
+    {
+        $user = User::factory()->create(['phone' => null]);
+
+        Livewire::actingAs($user)
+            ->test('profile.update-profile-information-form')
+            ->set('first_name', 'Мария')
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $this->assertNull($user->refresh()->phone);
+    }
 }

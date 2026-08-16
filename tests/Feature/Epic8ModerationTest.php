@@ -88,4 +88,22 @@ class Epic8ModerationTest extends TestCase
 
         $this->actingAs($user)->get('/admin/residential-properties')->assertForbidden();
     }
+
+    /**
+     * Регресс-тест: резолвится через настоящий HTTP-маршрут панели (а не через
+     * Livewire::test() напрямую по классу компонента), чтобы ловить рассинхрон между
+     * расположением класса ResidentialPropertyResource и путями ->discoverResources()
+     * в AdminPanelProvider — именно так однажды объявления «на модерации» пропали
+     * из реальной админки, хотя все тесты выше (через прямой вызов Livewire-класса)
+     * оставались зелёными.
+     */
+    public function test_admin_can_see_pending_listing_via_real_admin_route(): void
+    {
+        $listing = ResidentialProperty::factory()->moderation()->create(['address' => 'ул. Реальный Маршрут, 5']);
+
+        $this->actingAs($this->admin)
+            ->get('/admin/residential-properties')
+            ->assertOk()
+            ->assertSee('ул. Реальный Маршрут, 5');
+    }
 }

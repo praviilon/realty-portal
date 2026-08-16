@@ -38,11 +38,12 @@ new class extends Component
             'first_name' => ['required', new RussianName()],
             'last_name' => ['nullable', new RussianName()],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
-            'phone' => ['required', 'string', new RussianPhone(), Rule::unique(User::class)->ignore($user->id)],
+            'phone' => ['nullable', 'string', new RussianPhone(), Rule::unique(User::class)->ignore($user->id)],
         ]);
 
         $validated['first_name'] = NameFormatter::capitalize($validated['first_name']);
         $validated['last_name'] = NameFormatter::capitalize($validated['last_name'] ?? null);
+        $validated['phone'] = $validated['phone'] !== '' ? $validated['phone'] : null;
 
         $user->fill($validated);
 
@@ -123,9 +124,10 @@ new class extends Component
         </div>
 
         <div>
-            <x-input-label for="phone" :value="__('Телефон')" />
-            <x-text-input wire:model="phone" id="phone" name="phone" type="text" class="mt-1 block w-full" required placeholder="+7 (___) ___-__-__" autocomplete="tel" />
+            <x-input-label for="phone" :value="__('Телефон (необязательно)')" />
+            <x-text-input wire:model="phone" x-mask="'+7 (999) 999-99-99'" id="phone" name="phone" type="tel" class="mt-1 block w-full" placeholder="+7 (___) ___-__-__" autocomplete="tel" />
             <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+            <p class="mt-1 text-xs text-gray-500">{{ __('Чтобы удалить номер телефона, очистите поле и нажмите «Сохранить».') }}</p>
         </div>
 
         <div class="flex items-center gap-4">

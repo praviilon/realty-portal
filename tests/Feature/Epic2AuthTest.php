@@ -69,6 +69,23 @@ class Epic2AuthTest extends TestCase
             ->assertHasErrors(['phone']);
     }
 
+    public function test_registration_succeeds_without_phone(): void
+    {
+        $component = Volt::test('pages.auth.register')
+            ->set('first_name', 'Иван')
+            ->set('email', 'ivan-no-phone@example.com')
+            ->set('phone', '')
+            ->set('password', 'Passw0rd')
+            ->set('password_confirmation', 'Passw0rd')
+            ->call('register');
+
+        $component->assertHasNoErrors();
+
+        $user = User::where('email', 'ivan-no-phone@example.com')->first();
+        $this->assertNotNull($user);
+        $this->assertNull($user->phone);
+    }
+
     public function test_registration_rejects_weak_password(): void
     {
         Volt::test('pages.auth.register')
