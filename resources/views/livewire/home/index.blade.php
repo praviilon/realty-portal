@@ -73,29 +73,90 @@
         </div>
     </div>
 
-    <!-- Подборка объявлений -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-gray-900">Новые объявления</h2>
-            <a href="{{ route('residential.search') }}" wire:navigate class="text-sm text-primary-600 hover:underline">Смотреть все &rarr;</a>
+    <!-- Подборки объявлений — три группы по типам (доработка после Вехи 3) -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+        <div>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-gray-900">Жилая недвижимость</h2>
+                <a href="{{ route('residential.search') }}" wire:navigate class="text-sm text-primary-600 hover:underline">Смотреть все &rarr;</a>
+            </div>
+
+            @if ($featuredResidential->isEmpty())
+                <p class="text-gray-500">Пока нет активных объявлений — станьте первым, кто разместит объект.</p>
+            @else
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @foreach ($featuredResidential as $listing)
+                        <a href="{{ route('residential.show', $listing) }}" wire:navigate class="flex gap-3 bg-white border rounded-xl p-4 hover:shadow-lg transition">
+                            <x-listing-thumb :photo="$listing->mainPhoto" />
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between">
+                                    <div class="font-semibold text-lg">{{ number_format($listing->price, 0, '', ' ') }} ₽</div>
+                                    <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $listing->property_type_label }}</span>
+                                </div>
+                                <div class="text-gray-600 text-sm mt-1">{{ $listing->address }}</div>
+                                <div class="text-gray-500 text-sm">{{ $listing->area }} м² · этаж {{ $listing->floor }}/{{ $listing->total_floors }}</div>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
         </div>
 
-        @if ($featured->isEmpty())
-            <p class="text-gray-500">Пока нет активных объявлений — станьте первым, кто разместит объект.</p>
-        @else
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach ($featured as $listing)
-                    <a href="{{ route('residential.show', $listing) }}" wire:navigate class="block bg-white border rounded-xl p-4 hover:shadow-lg transition">
-                        <div class="flex items-center justify-between">
-                            <div class="font-semibold text-lg">{{ number_format($listing->price, 0, '', ' ') }} ₽</div>
-                            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $listing->property_type_label }}</span>
-                        </div>
-                        <div class="text-gray-600 text-sm mt-1">{{ $listing->address }}</div>
-                        <div class="text-gray-500 text-sm">{{ $listing->area }} м² · этаж {{ $listing->floor }}/{{ $listing->total_floors }}</div>
-                    </a>
-                @endforeach
+        <div>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-gray-900">Коммерческая недвижимость</h2>
+                <a href="{{ route('commercial.search') }}" wire:navigate class="text-sm text-primary-600 hover:underline">Смотреть все &rarr;</a>
             </div>
-        @endif
+
+            @if ($featuredCommercial->isEmpty())
+                <p class="text-gray-500">Пока нет активных объявлений в этой категории.</p>
+            @else
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @foreach ($featuredCommercial as $listing)
+                        <a href="{{ route('commercial.show', $listing) }}" wire:navigate class="flex gap-3 bg-white border rounded-xl p-4 hover:shadow-lg transition">
+                            <x-listing-thumb :photo="$listing->mainPhoto" />
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between">
+                                    <div class="font-semibold text-lg">
+                                        {{ number_format($listing->display_price ?? 0, 0, '', ' ') }} ₽{{ $listing->deal_type === 'rent' ? '/мес.' : '' }}
+                                    </div>
+                                    <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $listing->purpose_type_label }}</span>
+                                </div>
+                                <div class="text-gray-600 text-sm mt-1">{{ $listing->address }}</div>
+                                <div class="text-gray-500 text-sm">{{ $listing->area }} м² · этаж {{ $listing->floor }}/{{ $listing->total_floors }}</div>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-gray-900">Рабочие пространства</h2>
+                <a href="{{ route('workspace.search') }}" wire:navigate class="text-sm text-primary-600 hover:underline">Смотреть все &rarr;</a>
+            </div>
+
+            @if ($featuredWorkspaces->isEmpty())
+                <p class="text-gray-500">Пока нет активных объявлений в этой категории.</p>
+            @else
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @foreach ($featuredWorkspaces as $listing)
+                        <a href="{{ route('workspace.show', $listing) }}" wire:navigate class="flex gap-3 bg-white border rounded-xl p-4 hover:shadow-lg transition">
+                            <x-listing-thumb :photo="$listing->mainPhoto" />
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between">
+                                    <div class="font-semibold text-lg">от {{ number_format($listing->display_price ?? 0, 0, '', ' ') }} ₽</div>
+                                    <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $listing->workspace_type_label }}</span>
+                                </div>
+                                <div class="text-gray-600 text-sm mt-1">{{ $listing->address }}</div>
+                                <div class="text-gray-500 text-sm">{{ $listing->area }} м²</div>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
+        </div>
     </div>
 
     <!-- FAQ -->

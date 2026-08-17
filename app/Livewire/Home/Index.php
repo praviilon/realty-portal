@@ -59,10 +59,27 @@ class Index extends Component
 
     public function render()
     {
-        $featured = ResidentialProperty::query()
+        // Доработка: вместо одной общей подборки — три группы по типам
+        // объявлений, каждая ведёт на свой каталог (новые сверху).
+        $featuredResidential = ResidentialProperty::query()
             ->active()
+            ->with('mainPhoto')
             ->latest()
-            ->take(6)
+            ->take(3)
+            ->get();
+
+        $featuredCommercial = CommercialProperty::query()
+            ->active()
+            ->with(['saleDetail', 'rentDetail', 'mainPhoto'])
+            ->latest()
+            ->take(3)
+            ->get();
+
+        $featuredWorkspaces = Workspace::query()
+            ->active()
+            ->with(['pricing', 'mainPhoto'])
+            ->latest()
+            ->take(3)
             ->get();
 
         $faqsByCategory = Faq::query()
@@ -71,7 +88,9 @@ class Index extends Component
             ->groupBy('category');
 
         return view('livewire.home.index', [
-            'featured' => $featured,
+            'featuredResidential' => $featuredResidential,
+            'featuredCommercial' => $featuredCommercial,
+            'featuredWorkspaces' => $featuredWorkspaces,
             'faqsByCategory' => $faqsByCategory,
             'propertyTypeLabels' => ResidentialProperty::propertyTypeLabels(),
             'purposeTypeLabels' => CommercialProperty::purposeTypeLabels(),

@@ -111,7 +111,7 @@
                 <div class="space-y-4">
                     <div>
                         <x-input-label for="newPhotos" value="Фотографии (необязательно)" />
-                        <input type="file" wire:model="newPhotos" id="newPhotos" multiple accept="image/*" class="mt-1 block w-full text-sm">
+                        <x-photo-dropzone class="mt-1" />
                         <x-input-error :messages="$errors->get('newPhotos.*')" class="mt-2" />
                         <div wire:loading wire:target="newPhotos" class="text-xs text-gray-400 mt-1">Загрузка...</div>
                     </div>

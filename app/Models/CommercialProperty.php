@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class CommercialProperty extends Model
 {
@@ -51,6 +52,18 @@ class CommercialProperty extends Model
     public function photos(): MorphMany
     {
         return $this->morphMany(PropertyPhoto::class, 'photoable');
+    }
+
+    /**
+     * Главное фото для мини-карточек (каталог, главная) — доработка после
+     * Вехи 3: отдельная связь с MorphOne, чтобы не тянуть все фото ради
+     * одной миниатюры (сортировка: is_main первым, затем sort_order).
+     */
+    public function mainPhoto(): MorphOne
+    {
+        return $this->morphOne(PropertyPhoto::class, 'photoable')
+            ->orderByDesc('is_main')
+            ->orderBy('sort_order');
     }
 
     public function rentDetail(): HasOne

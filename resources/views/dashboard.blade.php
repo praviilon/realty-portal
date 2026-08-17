@@ -15,7 +15,7 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Мои объявления</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Мои объявления (жилая недвижимость)</h3>
                     <a href="{{ route('residential.create') }}" wire:navigate>
                         <x-primary-button type="button">Разместить объявление</x-primary-button>
                     </a>

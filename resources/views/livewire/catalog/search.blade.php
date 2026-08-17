@@ -73,13 +73,16 @@
                 <div class="relative bg-white border rounded-xl p-4 hover:shadow-lg transition">
                     <a href="{{ route('residential.show', $listing) }}" wire:navigate class="absolute inset-0 z-0" aria-label="Открыть объявление"></a>
 
-                    <div class="relative z-10 pointer-events-none">
-                        <div class="flex items-center justify-between pr-10">
-                            <div class="font-semibold text-lg">{{ number_format($listing->price, 0, '', ' ') }} ₽</div>
-                            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $listing->property_type_label }}</span>
+                    <div class="relative z-10 pointer-events-none flex gap-3">
+                        <x-listing-thumb :photo="$listing->mainPhoto" />
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between pr-10">
+                                <div class="font-semibold text-lg">{{ number_format($listing->price, 0, '', ' ') }} ₽</div>
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $listing->property_type_label }}</span>
+                            </div>
+                            <div class="text-gray-600 text-sm mt-1">{{ $listing->address }}</div>
+                            <div class="text-gray-500 text-sm">{{ $listing->area }} м² · этаж {{ $listing->floor }}/{{ $listing->total_floors }}</div>
                         </div>
-                        <div class="text-gray-600 text-sm mt-1">{{ $listing->address }}</div>
-                        <div class="text-gray-500 text-sm">{{ $listing->area }} м² · этаж {{ $listing->floor }}/{{ $listing->total_floors }}</div>
                     </div>
 
                     <div class="absolute top-3 right-3 z-20 flex flex-col gap-2">

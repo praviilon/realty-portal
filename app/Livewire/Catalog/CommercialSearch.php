@@ -95,7 +95,7 @@ class CommercialSearch extends Component
 
     public function render()
     {
-        $listings = $this->filteredQuery()->latest()->paginate(12);
+        $listings = $this->filteredQuery()->with('mainPhoto')->latest()->paginate(12);
         $pins = $this->pins();
 
         $this->dispatch('catalog:pins-updated', pins: $pins);
