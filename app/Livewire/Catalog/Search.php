@@ -4,6 +4,7 @@ namespace App\Livewire\Catalog;
 
 use App\Models\ResidentialProperty;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -29,6 +30,13 @@ class Search extends Component
     #[Url]
     public string $view = 'list'; // list | map
 
+    /**
+     * Выделенная на карте область — эпик 19 дорожной карты (Веха 2).
+     * Массив вершин полигона [['lat' => ..., 'lng' => ...], ...], минимум 3.
+     */
+    #[Url]
+    public array $areaPolygon = [];
+
     public function updated($property): void
     {
         if (in_array($property, ['dealType', 'propertyType', 'priceMin', 'priceMax'])) {
@@ -42,14 +50,97 @@ class Search extends Component
         $this->resetPage();
     }
 
+    /**
+     * Вызывается из resources/js/yandex-map.js после того, как пользователь
+     * выделил на карте прямоугольную область (клик по двум противоположным углам).
+     */
+    public function applyAreaSelection(array $points): void
+    {
+        $this->areaPolygon = $points;
+        $this->resetPage();
+    }
+
+    public function clearAreaSelection(): void
+    {
+        $this->areaPolygon = [];
+        $this->resetPage();
+    }
+
     protected function filteredQuery(): Builder
     {
-        return ResidentialProperty::query()
+        $query = ResidentialProperty::query()
             ->active()
             ->where('deal_type', $this->dealType)
             ->when($this->propertyType, fn ($q) => $q->where('property_type', $this->propertyType))
             ->when($this->priceMin, fn ($q) => $q->where('price', '>=', $this->priceMin))
             ->when($this->priceMax, fn ($q) => $q->where('price', '<=', $this->priceMax));
+
+        if (count($this->areaPolygon) >= 3) {
+            $query = $this->applyAreaFilter($query);
+        }
+
+        return $query;
+    }
+
+    /**
+     * MySQL (прод/дев) — быстрая фильтрация через ST_Contains и SPATIAL INDEX
+     * на сгенерированной колонке location (см. миграцию
+     * 2024_02_04_000001_add_location_point_to_residential_properties_table).
+     * На любой другой СУБД (sqlite в тестах, см. phpunit.xml) — тот же результат
+     * средствами PHP (алгоритм ray casting по lat/lng), без ST_Contains.
+     *
+     * Полигон намеренно интерпретируется как плоский (без привязки к SRID
+     * 4326/эллипсоиду) — см. комментарий в миграции.
+     */
+    protected function applyAreaFilter(Builder $query): Builder
+    {
+        if (DB::connection()->getDriverName() === 'mysql') {
+            $ring = collect($this->areaPolygon)
+                ->push($this->areaPolygon[0])
+                ->map(fn (array $point) => $point['lng'].' '.$point['lat'])
+                ->implode(', ');
+
+            return $query->whereRaw('ST_Contains(ST_GeomFromText(?), location)', ["POLYGON(({$ring}))"]);
+        }
+
+        $polygon = $this->areaPolygon;
+
+        $matchingIds = (clone $query)
+            ->get(['id', 'lat', 'lng'])
+            ->filter(fn (ResidentialProperty $listing) => self::pointInPolygon(
+                (float) $listing->lat,
+                (float) $listing->lng,
+                $polygon
+            ))
+            ->pluck('id');
+
+        return $query->whereIn('id', $matchingIds);
+    }
+
+    /**
+     * Простой ray casting — является ли точка (lat, lng) внутри полигона,
+     * заданного массивом вершин [['lat' => ..., 'lng' => ...], ...].
+     */
+    protected static function pointInPolygon(float $lat, float $lng, array $polygon): bool
+    {
+        $inside = false;
+        $count = count($polygon);
+
+        for ($i = 0, $j = $count - 1; $i < $count; $j = $i++) {
+            $latI = (float) $polygon[$i]['lat'];
+            $lngI = (float) $polygon[$i]['lng'];
+            $latJ = (float) $polygon[$j]['lat'];
+            $lngJ = (float) $polygon[$j]['lng'];
+
+            $intersects = (($latI > $lat) !== ($latJ > $lat))
+                && ($lng < ($lngJ - $lngI) * ($lat - $latI) / ($latJ - $latI) + $lngI);
+
+            if ($intersects) {
+                $inside = ! $inside;
+            }
+        }
+
+        return $inside;
     }
 
     /**

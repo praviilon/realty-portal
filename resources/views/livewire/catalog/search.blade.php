@@ -54,7 +54,14 @@
         </div>
 
         @if ($view === 'map')
-            <x-yandex-map :pins="$pins" class="mb-6" />
+            <x-yandex-map :pins="$pins" :selectable="true" class="mb-6" />
+
+            @if (count($areaPolygon) >= 3)
+                <p class="text-sm text-gray-500 -mt-4 mb-6">
+                    Показаны объявления в выделенной на карте области.
+                    <button type="button" wire:click="clearAreaSelection" class="text-blue-600 hover:underline">Сбросить область</button>
+                </p>
+            @endif
         @endif
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" wire:loading.class="opacity-50">
