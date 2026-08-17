@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Forms;
 
+use App\Services\SmartCaptchaVerifier;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -12,6 +13,14 @@ use Livewire\Form;
 
 class LoginForm extends Form
 {
+    /**
+     * После скольких неверных попыток пароля требовать SmartCaptcha —
+     * эпик 31 дорожной карты (Веха 3). Меньше лимита блокировки RateLimiter
+     * (5 попыток, см. ensureIsNotRateLimited) — капча должна появляться
+     * раньше полной блокировки, а не вместо неё.
+     */
+    public const CAPTCHA_AFTER_ATTEMPTS = 3;
+
     #[Validate('required|string|email')]
     public string $email = '';
 
@@ -20,6 +29,8 @@ class LoginForm extends Form
 
     #[Validate('boolean')]
     public bool $remember = false;
+
+    public string $captchaToken = '';
 
     /**
      * Attempt to authenticate the request's credentials.
@@ -30,6 +41,10 @@ class LoginForm extends Form
     {
         $this->ensureIsNotRateLimited();
 
+        if ($this->requiresCaptcha()) {
+            $this->ensureCaptchaIsValid();
+        }
+
         if (! Auth::attempt($this->only(['email', 'password']), $this->remember)) {
             RateLimiter::hit($this->throttleKey());
 
@@ -39,6 +54,30 @@ class LoginForm extends Form
         }
 
         RateLimiter::clear($this->throttleKey());
+    }
+
+    /**
+     * Нужно ли показывать/проверять SmartCaptcha — после 3 неверных попыток
+     * пароля для текущего email+IP. Публичный метод — используется и в
+     * Blade (Volt-компонент login), чтобы решить, рендерить ли виджет.
+     */
+    public function requiresCaptcha(): bool
+    {
+        return RateLimiter::attempts($this->throttleKey()) >= self::CAPTCHA_AFTER_ATTEMPTS;
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    protected function ensureCaptchaIsValid(): void
+    {
+        if (app(SmartCaptchaVerifier::class)->verify($this->captchaToken)) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'form.captchaToken' => 'Пройдите проверку «Я не робот», чтобы продолжить.',
+        ]);
     }
 
     /**

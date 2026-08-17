@@ -48,6 +48,12 @@ new #[Layout('layouts.guest')] class extends Component
             <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
         </div>
 
+        <!-- SmartCaptcha после 3 неверных попыток пароля (эпик 31, Веха 3) -->
+        @if ($form->requiresCaptcha())
+            <x-smart-captcha model="form.captchaToken" />
+            <x-input-error :messages="$errors->get('form.captchaToken')" class="mt-2" />
+        @endif
+
         <!-- Remember Me -->
         <div class="block mt-4">
             <label for="remember" class="inline-flex items-center">
