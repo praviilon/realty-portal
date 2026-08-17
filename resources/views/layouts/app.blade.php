@@ -41,7 +41,7 @@
                         <a href="{{ route('help') }}" wire:navigate class="hover:text-gray-800">Помощь</a>
                         <a href="{{ route('legal.terms') }}" wire:navigate class="hover:text-gray-800">Пользовательское соглашение</a>
                         <a href="{{ route('legal.privacy') }}" wire:navigate class="hover:text-gray-800">Конфиденциальность</a>
-                        <a href="{{ route('home') }}#faq" wire:navigate class="hover:text-gray-800">FAQ</a>
+                        <a href="{{ route('faq.index') }}" wire:navigate class="hover:text-gray-800">FAQ</a>
                     </div>
                 </div>
             </footer>

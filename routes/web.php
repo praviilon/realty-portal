@@ -7,6 +7,7 @@ use App\Livewire\Chat\Thread as ChatThread;
 use App\Livewire\CommercialProperty\CreateWizard as CommercialPropertyWizard;
 use App\Livewire\CommercialProperty\Show as CommercialPropertyShow;
 use App\Livewire\Comparison\Index as ComparisonIndex;
+use App\Livewire\Faq\Index as FaqIndex;
 use App\Livewire\Favorites\Index as FavoritesIndex;
 use App\Livewire\Home\Index as HomePage;
 use App\Livewire\Property\CreateWizard as ResidentialPropertyWizard;
@@ -39,6 +40,10 @@ Route::view('/about', 'about')->name('about');
 Route::view('/help', 'help')->name('help');
 Route::view('/legal/terms', 'legal.terms')->name('legal.terms');
 Route::view('/legal/privacy', 'legal.privacy')->name('legal.privacy');
+
+// Эпик 30 (Веха 3): отдельная страница FAQ с категориями (раньше FAQ был
+// только аккордеоном на главной — та секция осталась и там же).
+Route::get('/faq', FaqIndex::class)->name('faq.index');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/account/listings/create', ResidentialPropertyWizard::class)->name('residential.create');
