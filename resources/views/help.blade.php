@@ -34,14 +34,14 @@
                     <h3 class="text-base font-semibold text-gray-900 mb-2">Забыли пароль</h3>
                     <p>
                         Самостоятельное восстановление пароля пока не реализовано — напишите на
-                        <a href="mailto:support@a-realty.example" class="text-blue-600 hover:underline">support@a-realty.example</a>,
+                        <a href="mailto:support@a-realty.example" class="text-primary-600 hover:underline">support@a-realty.example</a>,
                         и администратор сбросит пароль вручную.
                     </p>
                 </section>
             </div>
 
             <div class="text-center">
-                <a href="{{ route('home') }}#faq" wire:navigate class="text-blue-600 hover:underline text-sm">
+                <a href="{{ route('faq.index') }}" wire:navigate class="text-primary-600 hover:underline text-sm">
                     Смотреть часто задаваемые вопросы &rarr;
                 </a>
             </div>

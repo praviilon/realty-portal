@@ -46,7 +46,7 @@
                     <h3 class="text-base font-semibold text-gray-900 mb-2">5. Контакты</h3>
                     <p>
                         По вопросам обработки персональных данных пишите на
-                        <a href="mailto:privacy@a-realty.example" class="text-blue-600 hover:underline">privacy@a-realty.example</a>.
+                        <a href="mailto:privacy@a-realty.example" class="text-primary-600 hover:underline">privacy@a-realty.example</a>.
                     </p>
                 </section>
             </div>

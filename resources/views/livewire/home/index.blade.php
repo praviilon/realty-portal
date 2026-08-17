@@ -77,7 +77,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="flex items-center justify-between mb-6">
             <h2 class="text-xl font-bold text-gray-900">Новые объявления</h2>
-            <a href="{{ route('residential.search') }}" wire:navigate class="text-sm text-blue-600 hover:underline">Смотреть все &rarr;</a>
+            <a href="{{ route('residential.search') }}" wire:navigate class="text-sm text-primary-600 hover:underline">Смотреть все &rarr;</a>
         </div>
 
         @if ($featured->isEmpty())

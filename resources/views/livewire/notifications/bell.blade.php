@@ -15,14 +15,14 @@
         <div class="flex items-center justify-between px-4 py-2 border-b">
             <span class="text-sm font-semibold text-gray-700">Уведомления</span>
             @if ($unreadCount > 0)
-                <button wire:click="markAllAsRead" class="text-xs text-blue-600 hover:underline">Прочитать все</button>
+                <button wire:click="markAllAsRead" class="text-xs text-primary-600 hover:underline">Прочитать все</button>
             @endif
         </div>
 
         <div class="max-h-80 overflow-y-auto divide-y">
             @forelse ($notifications as $notification)
                 <button wire:click="markAsRead('{{ $notification->id }}')"
-                        class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 {{ is_null($notification->read_at) ? 'bg-blue-50' : '' }}">
+                        class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 {{ is_null($notification->read_at) ? 'bg-primary-50' : '' }}">
                     <div class="text-gray-700">{{ $notification->data['message'] ?? '' }}</div>
                     <div class="text-xs text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</div>
                 </button>

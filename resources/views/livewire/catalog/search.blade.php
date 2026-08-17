@@ -1,6 +1,10 @@
 <div>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">Каталог жилой недвижимости</h1>
+        <div class="flex items-center gap-4 mb-6 flex-wrap">
+            <h1 class="text-2xl font-bold text-gray-900">Каталог жилой недвижимости</h1>
+            <a href="{{ route('commercial.search') }}" wire:navigate class="text-sm text-primary-600 hover:underline">Коммерция &rarr;</a>
+            <a href="{{ route('workspace.search') }}" wire:navigate class="text-sm text-primary-600 hover:underline">Рабочие пространства &rarr;</a>
+        </div>
 
         <div class="bg-white rounded-xl shadow p-4 mb-6">
             <div class="flex flex-wrap gap-4 items-end">
@@ -59,7 +63,7 @@
             @if (count($areaPolygon) >= 3)
                 <p class="text-sm text-gray-500 -mt-4 mb-6">
                     Показаны объявления в выделенной на карте области.
-                    <button type="button" wire:click="clearAreaSelection" class="text-blue-600 hover:underline">Сбросить область</button>
+                    <button type="button" wire:click="clearAreaSelection" class="text-primary-600 hover:underline">Сбросить область</button>
                 </p>
             @endif
         @endif

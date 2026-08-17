@@ -8,10 +8,10 @@
         <!-- Индикатор шагов -->
         <ol class="flex items-center w-full mb-8 text-sm">
             @foreach (['Основное', 'Адрес', 'Характеристики', 'Цена', 'Фотографии'] as $i => $label)
-                <li class="flex-1 flex items-center {{ $i + 1 < 5 ? 'after:content-[\'\'] after:flex-1 after:h-0.5 after:mx-2 ' . ($step > $i + 1 ? 'after:bg-blue-600' : 'after:bg-gray-200') : '' }}">
+                <li class="flex-1 flex items-center {{ $i + 1 < 5 ? 'after:content-[\'\'] after:flex-1 after:h-0.5 after:mx-2 ' . ($step > $i + 1 ? 'after:bg-primary-600' : 'after:bg-gray-200') : '' }}">
                     <button type="button" wire:click="goToStep({{ $i + 1 }})"
                             @disabled($step < $i + 1)
-                            class="flex items-center justify-center w-8 h-8 rounded-full shrink-0 {{ $step >= $i + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500' }}">
+                            class="flex items-center justify-center w-8 h-8 rounded-full shrink-0 {{ $step >= $i + 1 ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-500' }}">
                         {{ $i + 1 }}
                     </button>
                     <span class="ms-2 hidden sm:inline {{ $step === $i + 1 ? 'font-semibold text-gray-900' : 'text-gray-500' }}">{{ $label }}</span>
@@ -147,7 +147,7 @@
                         <div class="mt-2 grid grid-cols-2 gap-2">
                             @foreach ($floorFeatureLabels as $value => $label)
                                 <label class="flex items-center gap-2 text-sm text-gray-700">
-                                    <input type="checkbox" wire:model="floorFeatures" value="{{ $value }}" class="rounded border-gray-300 text-blue-600">
+                                    <input type="checkbox" wire:model="floorFeatures" value="{{ $value }}" class="rounded border-gray-300 text-primary-600">
                                     {{ $label }}
                                 </label>
                             @endforeach
@@ -160,7 +160,7 @@
                         <div class="mt-2 grid grid-cols-2 gap-2">
                             @foreach ($amenityLabels as $value => $label)
                                 <label class="flex items-center gap-2 text-sm text-gray-700">
-                                    <input type="checkbox" wire:model="amenities" value="{{ $value }}" class="rounded border-gray-300 text-blue-600">
+                                    <input type="checkbox" wire:model="amenities" value="{{ $value }}" class="rounded border-gray-300 text-primary-600">
                                     {{ $label }}
                                 </label>
                             @endforeach
@@ -173,7 +173,7 @@
                         <div class="mt-2 grid grid-cols-2 gap-2">
                             @foreach ($extraOptionLabels as $value => $label)
                                 <label class="flex items-center gap-2 text-sm text-gray-700">
-                                    <input type="checkbox" wire:model="extraOptions" value="{{ $value }}" class="rounded border-gray-300 text-blue-600">
+                                    <input type="checkbox" wire:model="extraOptions" value="{{ $value }}" class="rounded border-gray-300 text-primary-600">
                                     {{ $label }}
                                 </label>
                             @endforeach
@@ -204,7 +204,7 @@
                                 </div>
                             @endforeach
                         </div>
-                        <button type="button" wire:click="addAccessTimeRow" class="mt-2 text-sm text-blue-600 hover:underline">
+                        <button type="button" wire:click="addAccessTimeRow" class="mt-2 text-sm text-primary-600 hover:underline">
                             + Добавить интервал
                         </button>
                         <x-input-error :messages="$errors->get('accessTime')" class="mt-2" />
@@ -238,7 +238,7 @@
                                 </div>
                             @endforeach
                         </div>
-                        <button type="button" wire:click="addPricingRow" class="mt-2 text-sm text-blue-600 hover:underline">
+                        <button type="button" wire:click="addPricingRow" class="mt-2 text-sm text-primary-600 hover:underline">
                             + Добавить ставку
                         </button>
                         <x-input-error :messages="$errors->get('pricing')" class="mt-2" />
@@ -255,7 +255,7 @@
                     </div>
 
                     <label class="flex items-center gap-2 text-sm text-gray-700">
-                        <input type="checkbox" wire:model="utilitiesIncluded" class="rounded border-gray-300 text-blue-600">
+                        <input type="checkbox" wire:model="utilitiesIncluded" class="rounded border-gray-300 text-primary-600">
                         Коммунальные платежи включены в стоимость
                     </label>
                 </div>

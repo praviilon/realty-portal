@@ -8,10 +8,10 @@
         <!-- Индикатор шагов -->
         <ol class="flex items-center w-full mb-8 text-sm">
             @foreach (['Основное', 'Адрес', 'Характеристики', 'Фотографии'] as $i => $label)
-                <li class="flex-1 flex items-center {{ $i + 1 < 4 ? 'after:content-[\'\'] after:flex-1 after:h-0.5 after:mx-2 ' . ($step > $i + 1 ? 'after:bg-blue-600' : 'after:bg-gray-200') : '' }}">
+                <li class="flex-1 flex items-center {{ $i + 1 < 4 ? 'after:content-[\'\'] after:flex-1 after:h-0.5 after:mx-2 ' . ($step > $i + 1 ? 'after:bg-primary-600' : 'after:bg-gray-200') : '' }}">
                     <button type="button" wire:click="goToStep({{ $i + 1 }})"
                             @disabled($step < $i + 1)
-                            class="flex items-center justify-center w-8 h-8 rounded-full shrink-0 {{ $step >= $i + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500' }}">
+                            class="flex items-center justify-center w-8 h-8 rounded-full shrink-0 {{ $step >= $i + 1 ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-500' }}">
                         {{ $i + 1 }}
                     </button>
                     <span class="ms-2 hidden sm:inline {{ $step === $i + 1 ? 'font-semibold text-gray-900' : 'text-gray-500' }}">{{ $label }}</span>

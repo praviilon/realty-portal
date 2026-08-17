@@ -9,7 +9,7 @@
                     type="button"
                     @click="toggleAreaSelection()"
                     x-text="selectingArea ? 'Отменить выделение' : 'Выделить область на карте'"
-                    :class="selectingArea ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300'"
+                    :class="selectingArea ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-gray-600 border-gray-300'"
                     class="px-3 py-1.5 rounded-lg border transition"
                 ></button>
                 <button type="button" x-show="hasAreaSelection" x-cloak @click="clearAreaSelection()" class="text-gray-500 hover:text-red-600 underline">

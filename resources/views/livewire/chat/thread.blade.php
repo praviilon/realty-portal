@@ -6,7 +6,7 @@
             <div class="p-4 border-b">
                 <div class="font-medium">{{ $chat->otherParticipant(auth()->id())->full_name }}</div>
                 @if ($chat->listable)
-                    <a href="{{ route('residential.show', $chat->listable) }}" wire:navigate class="text-sm text-blue-600 hover:underline">
+                    <a href="{{ route('residential.show', $chat->listable) }}" wire:navigate class="text-sm text-primary-600 hover:underline">
                         {{ $chat->listable->address }}
                     </a>
                 @endif
@@ -15,7 +15,7 @@
             <div class="flex-1 overflow-y-auto p-4 space-y-3">
                 @forelse ($messages as $message)
                     <div class="flex {{ $message->sender_id === auth()->id() ? 'justify-end' : 'justify-start' }}">
-                        <div class="max-w-xs sm:max-w-sm px-3 py-2 rounded-lg text-sm {{ $message->sender_id === auth()->id() ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800' }}">
+                        <div class="max-w-xs sm:max-w-sm px-3 py-2 rounded-lg text-sm {{ $message->sender_id === auth()->id() ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-800' }}">
                             <div>{{ $message->text }}</div>
                             <div class="text-[10px] opacity-70 mt-1">{{ $message->created_at->format('d.m H:i') }}</div>
                         </div>

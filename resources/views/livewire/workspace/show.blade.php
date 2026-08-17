@@ -28,7 +28,7 @@
                             <div class="text-gray-600 mt-1">{{ $listing->address }}</div>
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
                                 {{ $listing->workspace_type_label }}
                             </span>
                             <livewire:favorites.button :favoritable="$listing" :key="'fav-workspace-show-'.$listing->id" />

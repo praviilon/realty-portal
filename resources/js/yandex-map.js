@@ -95,7 +95,7 @@ function yandexMap(initialPins, apiKey, selectable) {
 
             this.pins.forEach((pin) => {
                 const markerEl = document.createElement('div');
-                markerEl.className = 'flex items-center justify-center px-2 py-1 rounded-full bg-blue-600 text-white text-xs font-semibold shadow cursor-pointer whitespace-nowrap';
+                markerEl.className = 'flex items-center justify-center px-2 py-1 rounded-full bg-primary-600 text-white text-xs font-semibold shadow cursor-pointer whitespace-nowrap';
                 markerEl.textContent = new Intl.NumberFormat('ru-RU').format(pin.price) + ' ₽';
                 markerEl.title = pin.address;
 

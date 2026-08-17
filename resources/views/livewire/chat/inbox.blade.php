@@ -18,7 +18,7 @@
                             @endif
                         </div>
                         @if ($chat->unread_count > 0)
-                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-semibold">
+                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-semibold">
                                 {{ $chat->unread_count }}
                             </span>
                         @endif

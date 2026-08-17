@@ -1,8 +1,9 @@
 <div>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="flex items-center gap-4 mb-6">
+        <div class="flex items-center gap-4 mb-6 flex-wrap">
             <h1 class="text-2xl font-bold text-gray-900">Каталог коммерческой недвижимости</h1>
-            <a href="{{ route('residential.search') }}" wire:navigate class="text-sm text-blue-600 hover:underline">Жилая недвижимость &rarr;</a>
+            <a href="{{ route('residential.search') }}" wire:navigate class="text-sm text-primary-600 hover:underline">Жилая недвижимость &rarr;</a>
+            <a href="{{ route('workspace.search') }}" wire:navigate class="text-sm text-primary-600 hover:underline">Рабочие пространства &rarr;</a>
         </div>
 
         <div class="bg-white rounded-xl shadow p-4 mb-6">

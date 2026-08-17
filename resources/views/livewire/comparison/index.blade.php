@@ -33,7 +33,7 @@
                                 @php($showRoute = match ($category) { 'residential' => route('residential.show', $listing), 'commercial' => route('commercial.show', $listing), default => route('workspace.show', $listing) })
                                 <td class="p-4 align-top">
                                     <a href="{{ $showRoute }}"
-                                       wire:navigate class="font-medium text-blue-600 hover:underline">
+                                       wire:navigate class="font-medium text-primary-600 hover:underline">
                                         {{ $listing->address }}
                                     </a>
                                     <div>

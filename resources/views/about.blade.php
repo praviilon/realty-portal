@@ -18,7 +18,7 @@
                 </p>
                 <h3 class="text-base font-semibold text-gray-900 pt-2">Контакты</h3>
                 <p>
-                    Электронная почта поддержки: <a href="mailto:support@a-realty.example" class="text-blue-600 hover:underline">support@a-realty.example</a><br>
+                    Электронная почта поддержки: <a href="mailto:support@a-realty.example" class="text-primary-600 hover:underline">support@a-realty.example</a><br>
                     По вопросам размещения объявлений и работе личного кабинета — раздел «Помощь».
                 </p>
             </div>

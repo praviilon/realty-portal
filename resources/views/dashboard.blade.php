@@ -53,7 +53,7 @@
                                             'archived' => 'В архиве',
                                         ][$listing->status] ?? $listing->status }}
                                     </span>
-                                    <a href="{{ route('residential.edit', $listing) }}" wire:navigate class="text-sm text-blue-600 hover:underline">Изменить</a>
+                                    <a href="{{ route('residential.edit', $listing) }}" wire:navigate class="text-sm text-primary-600 hover:underline">Изменить</a>
                                 </div>
                             </div>
                         @endforeach
@@ -101,7 +101,7 @@
                                             'archived' => 'В архиве',
                                         ][$listing->status] ?? $listing->status }}
                                     </span>
-                                    <a href="{{ route('commercial.edit', $listing) }}" wire:navigate class="text-sm text-blue-600 hover:underline">Изменить</a>
+                                    <a href="{{ route('commercial.edit', $listing) }}" wire:navigate class="text-sm text-primary-600 hover:underline">Изменить</a>
                                 </div>
                             </div>
                         @endforeach
@@ -152,7 +152,7 @@
                                             'archived' => 'В архиве',
                                         ][$listing->status] ?? $listing->status }}
                                     </span>
-                                    <a href="{{ route('workspace.edit', $listing) }}" wire:navigate class="text-sm text-blue-600 hover:underline">Изменить</a>
+                                    <a href="{{ route('workspace.edit', $listing) }}" wire:navigate class="text-sm text-primary-600 hover:underline">Изменить</a>
                                 </div>
                             </div>
                         @endforeach

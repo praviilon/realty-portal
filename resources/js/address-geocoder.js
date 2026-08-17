@@ -93,7 +93,7 @@ function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
             }
 
             const markerEl = document.createElement('div');
-            markerEl.className = 'w-4 h-4 rounded-full bg-blue-600 border-2 border-white shadow';
+            markerEl.className = 'w-4 h-4 rounded-full bg-primary-600 border-2 border-white shadow';
 
             this.marker = new YMapMarker({coordinates: [lng, lat]}, markerEl);
             this.map.addChild(this.marker);
