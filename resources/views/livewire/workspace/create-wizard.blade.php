@@ -1,0 +1,317 @@
+<div>
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">
+            {{ $editing ? 'Редактирование объявления' : 'Новое объявление: рабочее пространство' }}
+        </h1>
+        <p class="text-gray-500 text-sm mb-6">Рабочее пространство · шаг {{ $step }} из 5</p>
+
+        <!-- Индикатор шагов -->
+        <ol class="flex items-center w-full mb-8 text-sm">
+            @foreach (['Основное', 'Адрес', 'Характеристики', 'Цена', 'Фотографии'] as $i => $label)
+                <li class="flex-1 flex items-center {{ $i + 1 < 5 ? 'after:content-[\'\'] after:flex-1 after:h-0.5 after:mx-2 ' . ($step > $i + 1 ? 'after:bg-blue-600' : 'after:bg-gray-200') : '' }}">
+                    <button type="button" wire:click="goToStep({{ $i + 1 }})"
+                            @disabled($step < $i + 1)
+                            class="flex items-center justify-center w-8 h-8 rounded-full shrink-0 {{ $step >= $i + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500' }}">
+                        {{ $i + 1 }}
+                    </button>
+                    <span class="ms-2 hidden sm:inline {{ $step === $i + 1 ? 'font-semibold text-gray-900' : 'text-gray-500' }}">{{ $label }}</span>
+                </li>
+            @endforeach
+        </ol>
+
+        <div class="bg-white rounded-xl shadow p-6">
+            <!-- Шаг 1: Основное -->
+            @if ($step === 1)
+                <div class="space-y-4">
+                    <div>
+                        <x-input-label for="workspaceType" value="Тип пространства" />
+                        <select wire:model.live="workspaceType" id="workspaceType" class="mt-1 rounded-lg border-gray-300 w-full">
+                            @foreach ($workspaceTypeLabels as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('workspaceType')" class="mt-2" />
+                    </div>
+
+                    @if ($workspaceType === 'workspace')
+                        <div>
+                            <x-input-label for="workspaceSubtype" value="Тип места" />
+                            <select wire:model="workspaceSubtype" id="workspaceSubtype" class="mt-1 rounded-lg border-gray-300 w-full">
+                                @foreach ($workspaceSubtypeLabels as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('workspaceSubtype')" class="mt-2" />
+                        </div>
+                    @endif
+
+                    <div>
+                        <x-input-label for="ownerType" value="Кто сдаёт" />
+                        <select wire:model="ownerType" id="ownerType" class="mt-1 rounded-lg border-gray-300 w-full">
+                            @foreach ($ownerTypeLabels as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('ownerType')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <x-input-label for="contactType" value="Как связываться" />
+                        <select wire:model="contactType" id="contactType" class="mt-1 rounded-lg border-gray-300 w-full">
+                            @foreach ($contactTypeLabels as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('contactType')" class="mt-2" />
+                    </div>
+                </div>
+            @endif
+
+            <!-- Шаг 2: Адрес -->
+            @if ($step === 2)
+                <div class="space-y-4">
+                    <div>
+                        <x-input-label for="address" value="Адрес" />
+                        <x-text-input wire:model="address" id="address" type="text" class="mt-1 block w-full" placeholder="г. Москва, ул. Примерная, д. 1" />
+                        <x-input-error :messages="$errors->get('address')" class="mt-2" />
+
+                        {{-- Эпик 20 (Веха 2): подсказки адреса + карта для уточнения точки --}}
+                        <x-address-picker :address="$address" :lat="$lat" :lng="$lng" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <x-input-label for="lat" value="Широта" />
+                            <x-text-input wire:model="lat" id="lat" type="number" step="any" class="mt-1 block w-full" placeholder="55.751244" />
+                            <x-input-error :messages="$errors->get('lat')" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="lng" value="Долгота" />
+                            <x-text-input wire:model="lng" id="lng" type="number" step="any" class="mt-1 block w-full" placeholder="37.618423" />
+                            <x-input-error :messages="$errors->get('lng')" class="mt-2" />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <x-input-label for="metroStation" value="Станция метро (необязательно)" />
+                            <x-text-input wire:model="metroStation" id="metroStation" type="text" class="mt-1 block w-full" />
+                            <x-input-error :messages="$errors->get('metroStation')" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="metroDistanceMin" value="Минут пешком до метро (необязательно)" />
+                            <x-text-input wire:model="metroDistanceMin" id="metroDistanceMin" type="number" class="mt-1 block w-full" />
+                            <x-input-error :messages="$errors->get('metroDistanceMin')" class="mt-2" />
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Шаг 3: Характеристики -->
+            @if ($step === 3)
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <x-input-label for="area" value="Площадь, м²" />
+                            <x-text-input wire:model="area" id="area" type="number" class="mt-1 block w-full" />
+                            <x-input-error :messages="$errors->get('area')" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="buildingType" value="Тип здания" />
+                            <select wire:model="buildingType" id="buildingType" class="mt-1 rounded-lg border-gray-300 w-full">
+                                @foreach ($buildingTypeLabels as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <x-input-label for="floor" value="Этаж" />
+                            <x-text-input wire:model="floor" id="floor" type="number" class="mt-1 block w-full" />
+                            <x-input-error :messages="$errors->get('floor')" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="totalFloors" value="Этажей в здании" />
+                            <x-text-input wire:model="totalFloors" id="totalFloors" type="number" class="mt-1 block w-full" />
+                            <x-input-error :messages="$errors->get('totalFloors')" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="entranceType" value="Вход" />
+                            <select wire:model="entranceType" id="entranceType" class="mt-1 rounded-lg border-gray-300 w-full">
+                                @foreach ($entranceTypeLabels as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <x-input-label value="Особенности помещения" />
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            @foreach ($floorFeatureLabels as $value => $label)
+                                <label class="flex items-center gap-2 text-sm text-gray-700">
+                                    <input type="checkbox" wire:model="floorFeatures" value="{{ $value }}" class="rounded border-gray-300 text-blue-600">
+                                    {{ $label }}
+                                </label>
+                            @endforeach
+                        </div>
+                        <x-input-error :messages="$errors->get('floorFeatures')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <x-input-label value="Удобства" />
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            @foreach ($amenityLabels as $value => $label)
+                                <label class="flex items-center gap-2 text-sm text-gray-700">
+                                    <input type="checkbox" wire:model="amenities" value="{{ $value }}" class="rounded border-gray-300 text-blue-600">
+                                    {{ $label }}
+                                </label>
+                            @endforeach
+                        </div>
+                        <x-input-error :messages="$errors->get('amenities')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <x-input-label value="Дополнительные услуги" />
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            @foreach ($extraOptionLabels as $value => $label)
+                                <label class="flex items-center gap-2 text-sm text-gray-700">
+                                    <input type="checkbox" wire:model="extraOptions" value="{{ $value }}" class="rounded border-gray-300 text-blue-600">
+                                    {{ $label }}
+                                </label>
+                            @endforeach
+                        </div>
+                        <x-input-error :messages="$errors->get('extraOptions')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <x-input-label value="Время доступа" />
+                        <div class="space-y-2 mt-2">
+                            @foreach ($accessTime as $index => $row)
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <select wire:model="accessTime.{{ $index }}.type" class="rounded-lg border-gray-300 text-sm">
+                                        @foreach ($accessTimeTypeLabels as $value => $label)
+                                            <option value="{{ $value }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+
+                                    @if (($row['type'] ?? null) !== 'round_the_clock')
+                                        <input type="time" wire:model="accessTime.{{ $index }}.time_from" class="rounded-lg border-gray-300 text-sm">
+                                        <span class="text-gray-400">&mdash;</span>
+                                        <input type="time" wire:model="accessTime.{{ $index }}.time_to" class="rounded-lg border-gray-300 text-sm">
+                                    @endif
+
+                                    <button type="button" wire:click="removeAccessTimeRow({{ $index }})" class="text-gray-400 hover:text-red-600 text-sm" @disabled(count($accessTime) <= 1)>
+                                        &times; Убрать
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
+                        <button type="button" wire:click="addAccessTimeRow" class="mt-2 text-sm text-blue-600 hover:underline">
+                            + Добавить интервал
+                        </button>
+                        <x-input-error :messages="$errors->get('accessTime')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <x-input-label for="description" value="Описание" />
+                        <textarea wire:model="description" id="description" rows="5" class="mt-1 rounded-lg border-gray-300 w-full"></textarea>
+                        <x-input-error :messages="$errors->get('description')" class="mt-2" />
+                    </div>
+                </div>
+            @endif
+
+            <!-- Шаг 4: Цена и условия -->
+            @if ($step === 4)
+                <div class="space-y-4">
+                    <div>
+                        <x-input-label value="Ставки по периодам" />
+                        <div class="space-y-2 mt-2">
+                            @foreach ($pricing as $index => $row)
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <select wire:model="pricing.{{ $index }}.period" class="rounded-lg border-gray-300 text-sm">
+                                        @foreach ($pricingPeriodLabels as $value => $label)
+                                            <option value="{{ $value }}">{{ ucfirst($label) }}</option>
+                                        @endforeach
+                                    </select>
+                                    <x-text-input wire:model="pricing.{{ $index }}.price" type="number" class="w-32" placeholder="Цена, ₽" />
+                                    <button type="button" wire:click="removePricingRow({{ $index }})" class="text-gray-400 hover:text-red-600 text-sm" @disabled(count($pricing) <= 1)>
+                                        &times; Убрать
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
+                        <button type="button" wire:click="addPricingRow" class="mt-2 text-sm text-blue-600 hover:underline">
+                            + Добавить ставку
+                        </button>
+                        <x-input-error :messages="$errors->get('pricing')" class="mt-2" />
+                        @foreach ($pricing as $index => $row)
+                            <x-input-error :messages="$errors->get('pricing.'.$index.'.period')" class="mt-1" />
+                            <x-input-error :messages="$errors->get('pricing.'.$index.'.price')" class="mt-1" />
+                        @endforeach
+                    </div>
+
+                    <div>
+                        <x-input-label for="deposit" value="Депозит, ₽ (необязательно)" />
+                        <x-text-input wire:model="deposit" id="deposit" type="number" class="mt-1 block w-full" />
+                        <x-input-error :messages="$errors->get('deposit')" class="mt-2" />
+                    </div>
+
+                    <label class="flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" wire:model="utilitiesIncluded" class="rounded border-gray-300 text-blue-600">
+                        Коммунальные платежи включены в стоимость
+                    </label>
+                </div>
+            @endif
+
+            <!-- Шаг 5: Фотографии -->
+            @if ($step === 5)
+                <div class="space-y-4">
+                    <div>
+                        <x-input-label for="newPhotos" value="Фотографии (необязательно)" />
+                        <input type="file" wire:model="newPhotos" id="newPhotos" multiple accept="image/*" class="mt-1 block w-full text-sm">
+                        <x-input-error :messages="$errors->get('newPhotos.*')" class="mt-2" />
+                        <div wire:loading wire:target="newPhotos" class="text-xs text-gray-400 mt-1">Загрузка...</div>
+                    </div>
+
+                    @if (count($newPhotos))
+                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                            @foreach ($newPhotos as $index => $photo)
+                                <div class="relative">
+                                    <img src="{{ $photo->temporaryUrl() }}" class="w-full h-24 object-cover rounded-lg">
+                                    <button type="button" wire:click="removeNewPhoto({{ $index }})"
+                                            class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 text-xs">&times;</button>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if ($editing && $editing->photos->isNotEmpty())
+                        <div>
+                            <p class="text-sm text-gray-500 mb-2">Уже загруженные фото:</p>
+                            <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                                @foreach ($editing->photos as $photo)
+                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($photo->path) }}" class="w-full h-24 object-cover rounded-lg">
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
+            <!-- Навигация -->
+            <div class="flex items-center justify-between mt-8 pt-4 border-t">
+                <x-secondary-button type="button" wire:click="previousStep" :disabled="$step === 1">
+                    Назад
+                </x-secondary-button>
+
+                @if ($step < 5)
+                    <x-primary-button type="button" wire:click="nextStep">
+                        Далее
+                    </x-primary-button>
+                @else
+                    <x-primary-button type="button" wire:click="submit">
+                        Отправить на модерацию
+                    </x-primary-button>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>

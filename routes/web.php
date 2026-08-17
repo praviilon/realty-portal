@@ -11,6 +11,7 @@ use App\Livewire\Favorites\Index as FavoritesIndex;
 use App\Livewire\Home\Index as HomePage;
 use App\Livewire\Property\CreateWizard as ResidentialPropertyWizard;
 use App\Livewire\Property\Show as ResidentialPropertyShow;
+use App\Livewire\Workspace\CreateWizard as WorkspaceWizard;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomePage::class)->name('home');
@@ -39,6 +40,10 @@ Route::middleware(['auth'])->group(function () {
     // Эпик 13 (Веха 2): коммерческая недвижимость — та же схема маршрутов, что и у жилой.
     Route::get('/account/commercial-listings/create', CommercialPropertyWizard::class)->name('commercial.create');
     Route::get('/account/commercial-listings/{commercialProperty}/edit', CommercialPropertyWizard::class)->name('commercial.edit');
+
+    // Эпик 23 (Веха 3): рабочие пространства — та же схема маршрутов.
+    Route::get('/account/workspaces/create', WorkspaceWizard::class)->name('workspace.create');
+    Route::get('/account/workspaces/{workspace}/edit', WorkspaceWizard::class)->name('workspace.edit');
 
     Route::get('/account/chats', ChatInbox::class)->name('chat.index');
     Route::get('/account/chats/{chat}', ChatThread::class)->name('chat.show');
