@@ -46,6 +46,9 @@ new class extends Component
                         <x-nav-link :href="route('favorites.index')" :active="request()->routeIs('favorites.*')" wire:navigate>
                             {{ __('Избранное') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('comparison.index')" :active="request()->routeIs('comparison.*')" wire:navigate>
+                            {{ __('Сравнение') }}
+                        </x-nav-link>
                     @endauth
                 </div>
             </div>
@@ -122,6 +125,9 @@ new class extends Component
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('favorites.index')" :active="request()->routeIs('favorites.*')" wire:navigate>
                     {{ __('Избранное') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('comparison.index')" :active="request()->routeIs('comparison.*')" wire:navigate>
+                    {{ __('Сравнение') }}
                 </x-responsive-nav-link>
             @endauth
         </div>

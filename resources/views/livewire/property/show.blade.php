@@ -30,6 +30,7 @@
                                 {{ $listing->deal_type_label }}
                             </span>
                             <livewire:favorites.button :favoritable="$listing" :key="'fav-residential-show-'.$listing->id" />
+                            <livewire:comparison.button :comparable="$listing" :key="'cmp-residential-show-'.$listing->id" />
                         </div>
                     </div>
 

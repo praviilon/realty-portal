@@ -70,6 +70,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
         return $this->hasMany(Favorite::class);
     }
 
+    public function comparisonLists(): HasMany
+    {
+        return $this->hasMany(ComparisonList::class);
+    }
+
     public function getFullNameAttribute(): string
     {
         return trim($this->first_name . ' ' . $this->last_name);

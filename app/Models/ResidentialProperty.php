@@ -76,4 +76,13 @@ class ResidentialProperty extends Model
     {
         return self::propertyTypeLabels()[$this->property_type] ?? $this->property_type;
     }
+
+    /**
+     * Тип списка сравнения (эпик 18, Веха 2) — см. аналогичный метод
+     * в App\Models\CommercialProperty.
+     */
+    public function comparisonListType(): string
+    {
+        return 'residential_' . $this->deal_type;
+    }
 }

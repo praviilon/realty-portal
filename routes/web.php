@@ -6,6 +6,7 @@ use App\Livewire\Chat\Inbox as ChatInbox;
 use App\Livewire\Chat\Thread as ChatThread;
 use App\Livewire\CommercialProperty\CreateWizard as CommercialPropertyWizard;
 use App\Livewire\CommercialProperty\Show as CommercialPropertyShow;
+use App\Livewire\Comparison\Index as ComparisonIndex;
 use App\Livewire\Favorites\Index as FavoritesIndex;
 use App\Livewire\Home\Index as HomePage;
 use App\Livewire\Property\CreateWizard as ResidentialPropertyWizard;
@@ -44,6 +45,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Эпик 17 (Веха 2): избранное.
     Route::get('/account/favorites', FavoritesIndex::class)->name('favorites.index');
+
+    // Эпик 18 (Веха 2): сравнение объявлений.
+    Route::get('/account/comparison', ComparisonIndex::class)->name('comparison.index');
 });
 
 // Без middleware 'verified' — email/телефон не подтверждаются (см. раздел 5 плана).

@@ -175,4 +175,14 @@ class CommercialProperty extends Model
     {
         return self::buildingTypeLabels()[$this->building_type] ?? $this->building_type;
     }
+
+    /**
+     * Тип списка сравнения (эпик 18, Веха 2) — по нему пользователь может
+     * одновременно сравнивать до 3 объектов только внутри одного и того же
+     * сочетания «тип объекта + вид сделки», см. App\Livewire\Comparison\Button.
+     */
+    public function comparisonListType(): string
+    {
+        return 'commercial_' . $this->deal_type;
+    }
 }

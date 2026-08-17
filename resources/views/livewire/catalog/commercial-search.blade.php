@@ -76,8 +76,9 @@
                         <div class="text-gray-500 text-sm">{{ $listing->area }} м² · этаж {{ $listing->floor }}/{{ $listing->total_floors }}</div>
                     </div>
 
-                    <div class="absolute top-3 right-3 z-20">
+                    <div class="absolute top-3 right-3 z-20 flex flex-col gap-2">
                         <livewire:favorites.button :favoritable="$listing" :key="'fav-commercial-'.$listing->id" />
+                        <livewire:comparison.button :comparable="$listing" :key="'cmp-commercial-'.$listing->id" />
                     </div>
                 </div>
             @empty
