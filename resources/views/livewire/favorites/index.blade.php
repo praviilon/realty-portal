@@ -11,19 +11,24 @@
                     class="px-4 py-2 {{ $tab === 'commercial' ? 'bg-gray-800 text-white' : 'bg-white text-gray-600' }}">
                 Коммерция ({{ $counts['commercial'] ?? 0 }})
             </button>
+            <button type="button" wire:click="setTab('workspace')"
+                    class="px-4 py-2 {{ $tab === 'workspace' ? 'bg-gray-800 text-white' : 'bg-white text-gray-600' }}">
+                Рабочие пространства ({{ $counts['workspace'] ?? 0 }})
+            </button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4" wire:loading.class="opacity-50">
             @forelse ($favorites as $favorite)
                 @php($listing = $favorite->favoritable)
+                @php($showRoute = match ($tab) { 'residential' => route('residential.show', $listing), 'commercial' => route('commercial.show', $listing), default => route('workspace.show', $listing) })
+                @php($price = match ($tab) { 'residential' => $listing->price, default => $listing->display_price })
                 <div class="relative bg-white border rounded-xl p-4 hover:shadow-lg transition">
-                    <a href="{{ $tab === 'residential' ? route('residential.show', $listing) : route('commercial.show', $listing) }}"
-                       wire:navigate class="absolute inset-0 z-0" aria-label="Открыть объявление"></a>
+                    <a href="{{ $showRoute }}" wire:navigate class="absolute inset-0 z-0" aria-label="Открыть объявление"></a>
 
                     <div class="relative z-10 flex items-start justify-between gap-3 pointer-events-none">
                         <div>
                             <div class="font-semibold text-lg">
-                                {{ number_format($tab === 'residential' ? $listing->price : ($listing->display_price ?? 0), 0, '', ' ') }} ₽{{ $tab === 'commercial' && $listing->deal_type === 'rent' ? '/мес.' : '' }}
+                                {{ $tab === 'workspace' ? 'от ' : '' }}{{ number_format($price ?? 0, 0, '', ' ') }} ₽{{ $tab === 'commercial' && $listing->deal_type === 'rent' ? '/мес.' : '' }}
                             </div>
                             <div class="text-gray-600 text-sm mt-1">{{ $listing->address }}</div>
                             <div class="text-gray-500 text-sm">{{ $listing->area }} м²</div>
@@ -41,8 +46,10 @@
                 <p class="text-gray-500 col-span-full">
                     @if ($tab === 'residential')
                         В избранном пока нет жилой недвижимости.
-                    @else
+                    @elseif ($tab === 'commercial')
                         В избранном пока нет коммерческой недвижимости.
+                    @else
+                        В избранном пока нет рабочих пространств.
                     @endif
                 </p>
             @endforelse

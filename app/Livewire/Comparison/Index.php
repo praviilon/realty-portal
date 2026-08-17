@@ -11,7 +11,10 @@ use Livewire\Component;
  * Страница «Сравнение» — эпик 18 дорожной карты (Веха 2). Отдельная вкладка
  * на каждое сочетание «тип объекта + вид сделки» (residential_sale,
  * residential_rent, commercial_sale, commercial_rent), т.к. сравнивать
- * между собой можно только однородные объявления.
+ * между собой можно только однородные объявления. С эпика 28 (Веха 3)
+ * добавлена вкладка "workspace" — у рабочих пространств нет деления на
+ * продажу/аренду (см. Workspace::comparisonListType()), поэтому это
+ * единственная вкладка своего типа, а не пара sale/rent.
  */
 #[Layout('layouts.app')]
 class Index extends Component
@@ -21,6 +24,7 @@ class Index extends Component
         'residential_rent' => 'Жильё — аренда',
         'commercial_sale' => 'Коммерция — продажа',
         'commercial_rent' => 'Коммерция — аренда',
+        'workspace' => 'Рабочие пространства',
     ];
 
     public string $tab = 'residential_sale';
@@ -77,7 +81,13 @@ class Index extends Component
             ? $list->items->filter(fn (ComparisonItem $item) => $item->comparable !== null)->values()
             : collect();
 
-        $isResidential = str_starts_with($this->tab, 'residential');
+        // 'residential' | 'commercial' | 'workspace' — определяет, какие колонки
+        // и маршрут показа использовать в шаблоне (эпик 28, Веха 3).
+        $category = match (true) {
+            str_starts_with($this->tab, 'residential') => 'residential',
+            str_starts_with($this->tab, 'commercial') => 'commercial',
+            default => 'workspace',
+        };
 
         $counts = collect(array_keys(self::TABS))->mapWithKeys(
             fn (string $type) => [$type => ComparisonList::query()
@@ -90,7 +100,8 @@ class Index extends Component
 
         return view('livewire.comparison.index', [
             'items' => $items,
-            'isResidential' => $isResidential,
+            'category' => $category,
+            'isResidential' => $category === 'residential',
             'counts' => $counts,
         ]);
     }

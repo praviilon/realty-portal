@@ -30,8 +30,9 @@
                             <td class="p-4 font-medium text-gray-500 w-40">Объявление</td>
                             @foreach ($items as $item)
                                 @php($listing = $item->comparable)
+                                @php($showRoute = match ($category) { 'residential' => route('residential.show', $listing), 'commercial' => route('commercial.show', $listing), default => route('workspace.show', $listing) })
                                 <td class="p-4 align-top">
-                                    <a href="{{ $isResidential ? route('residential.show', $listing) : route('commercial.show', $listing) }}"
+                                    <a href="{{ $showRoute }}"
                                        wire:navigate class="font-medium text-blue-600 hover:underline">
                                         {{ $listing->address }}
                                     </a>
@@ -47,8 +48,9 @@
                             <td class="p-4 font-medium text-gray-500">Цена</td>
                             @foreach ($items as $item)
                                 @php($listing = $item->comparable)
+                                @php($price = match ($category) { 'residential' => $listing->price, default => $listing->display_price })
                                 <td class="p-4 font-semibold">
-                                    {{ number_format($isResidential ? $listing->price : ($listing->display_price ?? 0), 0, '', ' ') }} ₽{{ str_ends_with($tab, 'rent') ? '/мес.' : '' }}
+                                    {{ $category === 'workspace' ? 'от ' : '' }}{{ number_format($price ?? 0, 0, '', ' ') }} ₽{{ str_ends_with($tab, 'rent') ? '/мес.' : '' }}
                                 </td>
                             @endforeach
                         </tr>
@@ -56,7 +58,8 @@
                             <td class="p-4 font-medium text-gray-500">Тип</td>
                             @foreach ($items as $item)
                                 @php($listing = $item->comparable)
-                                <td class="p-4">{{ $isResidential ? $listing->property_type_label : $listing->purpose_type_label }}</td>
+                                @php($typeLabel = match ($category) { 'residential' => $listing->property_type_label, 'commercial' => $listing->purpose_type_label, default => $listing->workspace_type_label })
+                                <td class="p-4">{{ $typeLabel }}</td>
                             @endforeach
                         </tr>
                         <tr class="border-b bg-gray-50">
@@ -65,12 +68,14 @@
                                 <td class="p-4">{{ $item->comparable->area }} м²</td>
                             @endforeach
                         </tr>
-                        <tr class="border-b">
-                            <td class="p-4 font-medium text-gray-500">Этаж</td>
-                            @foreach ($items as $item)
-                                <td class="p-4">{{ $item->comparable->floor }} / {{ $item->comparable->total_floors }}</td>
-                            @endforeach
-                        </tr>
+                        @if ($category !== 'workspace')
+                            <tr class="border-b">
+                                <td class="p-4 font-medium text-gray-500">Этаж</td>
+                                @foreach ($items as $item)
+                                    <td class="p-4">{{ $item->comparable->floor }} / {{ $item->comparable->total_floors }}</td>
+                                @endforeach
+                            </tr>
+                        @endif
                         <tr>
                             <td class="p-4 font-medium text-gray-500">Просмотры</td>
                             @foreach ($items as $item)

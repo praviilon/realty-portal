@@ -5,14 +5,15 @@ namespace App\Livewire\Favorites;
 use App\Models\CommercialProperty;
 use App\Models\Favorite;
 use App\Models\ResidentialProperty;
+use App\Models\Workspace;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
  * Страница «Избранное» — эпик 17 дорожной карты (Веха 2). Вкладки по типам
- * объявлений (жильё/коммерция); в Вехе 3 сюда же добавится вкладка
+ * объявлений (жильё/коммерция); с эпика 28 (Веха 3) сюда же добавлена вкладка
  * «Рабочие пространства» — благодаря полиморфной связи favoritable
- * достаточно будет добавить ещё один пункт в TABS без изменения схемы.
+ * потребовалось лишь добавить ещё один пункт в TABS без изменения схемы.
  */
 #[Layout('layouts.app')]
 class Index extends Component
@@ -20,6 +21,7 @@ class Index extends Component
     protected const TABS = [
         'residential' => ResidentialProperty::class,
         'commercial' => CommercialProperty::class,
+        'workspace' => Workspace::class,
     ];
 
     public string $tab = 'residential';
