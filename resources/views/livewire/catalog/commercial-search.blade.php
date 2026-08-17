@@ -62,16 +62,24 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" wire:loading.class="opacity-50">
             @forelse ($listings as $listing)
-                <a href="{{ route('commercial.show', $listing) }}" wire:navigate class="block bg-white border rounded-xl p-4 hover:shadow-lg transition">
-                    <div class="flex items-center justify-between">
-                        <div class="font-semibold text-lg">
-                            {{ number_format($listing->display_price ?? 0, 0, '', ' ') }} ₽{{ $dealType === 'rent' ? '/мес.' : '' }}
+                <div class="relative bg-white border rounded-xl p-4 hover:shadow-lg transition">
+                    <a href="{{ route('commercial.show', $listing) }}" wire:navigate class="absolute inset-0 z-0" aria-label="Открыть объявление"></a>
+
+                    <div class="relative z-10 pointer-events-none">
+                        <div class="flex items-center justify-between pr-10">
+                            <div class="font-semibold text-lg">
+                                {{ number_format($listing->display_price ?? 0, 0, '', ' ') }} ₽{{ $dealType === 'rent' ? '/мес.' : '' }}
+                            </div>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $listing->purpose_type_label }}</span>
                         </div>
-                        <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $listing->purpose_type_label }}</span>
+                        <div class="text-gray-600 text-sm mt-1">{{ $listing->address }}</div>
+                        <div class="text-gray-500 text-sm">{{ $listing->area }} м² · этаж {{ $listing->floor }}/{{ $listing->total_floors }}</div>
                     </div>
-                    <div class="text-gray-600 text-sm mt-1">{{ $listing->address }}</div>
-                    <div class="text-gray-500 text-sm">{{ $listing->area }} м² · этаж {{ $listing->floor }}/{{ $listing->total_floors }}</div>
-                </a>
+
+                    <div class="absolute top-3 right-3 z-20">
+                        <livewire:favorites.button :favoritable="$listing" :key="'fav-commercial-'.$listing->id" />
+                    </div>
+                </div>
             @empty
                 <p class="text-gray-500 col-span-full">Ничего не найдено по заданным фильтрам.</p>
             @endforelse

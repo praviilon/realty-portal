@@ -25,9 +25,12 @@
                             <div class="text-2xl font-bold">{{ number_format($listing->price, 0, '', ' ') }} ₽</div>
                             <div class="text-gray-600 mt-1">{{ $listing->address }}</div>
                         </div>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                            {{ $listing->deal_type_label }}
-                        </span>
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                {{ $listing->deal_type_label }}
+                            </span>
+                            <livewire:favorites.button :favoritable="$listing" :key="'fav-residential-show-'.$listing->id" />
+                        </div>
                     </div>
 
                     <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 text-sm">
