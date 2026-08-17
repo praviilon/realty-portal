@@ -1,9 +1,11 @@
 <?php
 
+use App\Livewire\Catalog\CommercialSearch;
 use App\Livewire\Catalog\Search as CatalogSearch;
 use App\Livewire\Chat\Inbox as ChatInbox;
 use App\Livewire\Chat\Thread as ChatThread;
 use App\Livewire\CommercialProperty\CreateWizard as CommercialPropertyWizard;
+use App\Livewire\CommercialProperty\Show as CommercialPropertyShow;
 use App\Livewire\Home\Index as HomePage;
 use App\Livewire\Property\CreateWizard as ResidentialPropertyWizard;
 use App\Livewire\Property\Show as ResidentialPropertyShow;
@@ -12,6 +14,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', HomePage::class)->name('home');
 
 Route::get('/catalog', CatalogSearch::class)->name('residential.search');
+
+// Эпики 15-16 (Веха 2): каталог коммерческой недвижимости. Регистрируются
+// ДО '/catalog/{residentialProperty}' — иначе тот динамический маршрут
+// перехватит '/catalog/commercial' и попытается найти жилой объект с id
+// "commercial" (404), так и не дойдя до маршрутов ниже.
+Route::get('/catalog/commercial', CommercialSearch::class)->name('commercial.search');
+Route::get('/catalog/commercial/{commercialProperty}', CommercialPropertyShow::class)->name('commercial.show');
 
 Route::get('/catalog/{residentialProperty}', ResidentialPropertyShow::class)->name('residential.show');
 
