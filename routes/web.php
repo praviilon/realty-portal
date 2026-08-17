@@ -11,7 +11,9 @@ use App\Livewire\Favorites\Index as FavoritesIndex;
 use App\Livewire\Home\Index as HomePage;
 use App\Livewire\Property\CreateWizard as ResidentialPropertyWizard;
 use App\Livewire\Property\Show as ResidentialPropertyShow;
+use App\Livewire\Catalog\WorkspaceSearch;
 use App\Livewire\Workspace\CreateWizard as WorkspaceWizard;
+use App\Livewire\Workspace\Show as WorkspaceShow;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomePage::class)->name('home');
@@ -24,6 +26,11 @@ Route::get('/catalog', CatalogSearch::class)->name('residential.search');
 // "commercial" (404), так и не дойдя до маршрутов ниже.
 Route::get('/catalog/commercial', CommercialSearch::class)->name('commercial.search');
 Route::get('/catalog/commercial/{commercialProperty}', CommercialPropertyShow::class)->name('commercial.show');
+
+// Эпики 25-27 (Веха 3): каталог/карта и детальная карточка рабочих пространств —
+// та же причина размещения до '/catalog/{residentialProperty}', что и у коммерческой.
+Route::get('/catalog/workspaces', WorkspaceSearch::class)->name('workspace.search');
+Route::get('/catalog/workspaces/{workspace}', WorkspaceShow::class)->name('workspace.show');
 
 Route::get('/catalog/{residentialProperty}', ResidentialPropertyShow::class)->name('residential.show');
 

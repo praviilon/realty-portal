@@ -36,6 +36,9 @@ new class extends Component
                     <x-nav-link :href="route('commercial.search')" :active="request()->routeIs('commercial.search')" wire:navigate>
                         {{ __('Коммерция') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('workspace.search')" :active="request()->routeIs('workspace.search')" wire:navigate>
+                        {{ __('Рабочие пространства') }}
+                    </x-nav-link>
                     @auth
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                             {{ __('Личный кабинет') }}
@@ -115,6 +118,9 @@ new class extends Component
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('commercial.search')" :active="request()->routeIs('commercial.search')" wire:navigate>
                 {{ __('Коммерция') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('workspace.search')" :active="request()->routeIs('workspace.search')" wire:navigate>
+                {{ __('Рабочие пространства') }}
             </x-responsive-nav-link>
             @auth
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
