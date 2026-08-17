@@ -4,18 +4,20 @@ namespace App\Notifications;
 
 use App\Models\CommercialProperty;
 use App\Models\ResidentialProperty;
+use App\Models\Workspace;
 use Illuminate\Notifications\Notification;
 
 /**
  * Уведомление об одобрении/отклонении объявления модератором — эпик 11
  * дорожной карты (встроенные database-notifications Laravel, без своей
- * миграции, см. раздел 1 плана). С эпика 13 (Веха 2) переиспользуется и для
- * коммерческой недвижимости — обе модели дают одинаковый набор полей
- * (address/status/rejection_reason), поэтому один класс уведомления на оба типа.
+ * миграции, см. раздел 1 плана). С эпика 13 (Веха 2) переиспользуется для
+ * коммерческой недвижимости, а с эпика 24 (Веха 3) — и для рабочих
+ * пространств: у всех трёх моделей одинаковый набор нужных полей
+ * (address/status/rejection_reason), поэтому один класс уведомления на все типы.
  */
 class ListingStatusChanged extends Notification
 {
-    public function __construct(protected ResidentialProperty|CommercialProperty $listing)
+    public function __construct(protected ResidentialProperty|CommercialProperty|Workspace $listing)
     {
     }
 
