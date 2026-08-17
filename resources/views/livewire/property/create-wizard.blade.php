@@ -51,6 +51,9 @@
                         <x-input-label for="address" value="Адрес" />
                         <x-text-input wire:model="address" id="address" type="text" class="mt-1 block w-full" placeholder="г. Москва, ул. Примерная, д. 1" />
                         <x-input-error :messages="$errors->get('address')" class="mt-2" />
+
+                        {{-- Эпик 20 (Веха 2): подсказки адреса + карта для уточнения точки --}}
+                        <x-address-picker :address="$address" :lat="$lat" :lng="$lng" />
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -65,7 +68,7 @@
                         </div>
                     </div>
                     <p class="text-xs text-gray-400">
-                        Координаты пока вводятся вручную — выбор адреса на карте появится позже (эпик «Карта — выбор адреса при создании объявления»).
+                        Координаты можно ввести вручную либо выбрать адрес выше по подсказкам/карте.
                     </p>
                 </div>
             @endif
