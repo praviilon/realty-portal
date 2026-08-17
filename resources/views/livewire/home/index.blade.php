@@ -1,27 +1,71 @@
 <div>
-    <!-- Hero + форма поиска -->
+    <!-- Hero + форма поиска (эпик 29, Веха 3: вкладки по типам объявлений) -->
     <div class="bg-gray-800">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
             <h1 class="text-3xl sm:text-4xl font-bold text-white">Найдите недвижимость мечты</h1>
-            <p class="mt-3 text-gray-300">Продажа и аренда квартир, домов и коммерческих помещений</p>
+            <p class="mt-3 text-gray-300">Жильё, коммерция и рабочие пространства — продажа и аренда</p>
 
-            <form wire:submit="search" class="mt-8 bg-white rounded-xl shadow-lg p-4 flex flex-wrap gap-4 items-end justify-center">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1 text-left">Сделка</label>
-                    <select wire:model="searchDealType" class="rounded-lg border-gray-300 text-sm">
-                        <option value="sale">Купить</option>
-                        <option value="rent">Снять</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1 text-left">Тип недвижимости</label>
-                    <select wire:model="searchPropertyType" class="rounded-lg border-gray-300 text-sm">
-                        <option value="">Любой</option>
-                        @foreach ($propertyTypeLabels as $value => $label)
-                            <option value="{{ $value }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
+            <div class="mt-8 inline-flex rounded-t-lg overflow-hidden text-sm">
+                <button type="button" wire:click="switchCategory('residential')"
+                        class="px-5 py-2.5 font-medium {{ $activeCategory === 'residential' ? 'bg-white text-gray-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }}">
+                    Жильё
+                </button>
+                <button type="button" wire:click="switchCategory('commercial')"
+                        class="px-5 py-2.5 font-medium {{ $activeCategory === 'commercial' ? 'bg-white text-gray-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }}">
+                    Коммерция
+                </button>
+                <button type="button" wire:click="switchCategory('workspace')"
+                        class="px-5 py-2.5 font-medium {{ $activeCategory === 'workspace' ? 'bg-white text-gray-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }}">
+                    Рабочие пространства
+                </button>
+            </div>
+
+            <form wire:submit="search" class="bg-white rounded-b-xl rounded-tr-xl shadow-lg p-4 flex flex-wrap gap-4 items-end justify-center">
+                @if ($activeCategory === 'residential')
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1 text-left">Сделка</label>
+                        <select wire:model="searchDealType" class="rounded-lg border-gray-300 text-sm">
+                            <option value="sale">Купить</option>
+                            <option value="rent">Снять</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1 text-left">Тип недвижимости</label>
+                        <select wire:model="searchPropertyType" class="rounded-lg border-gray-300 text-sm">
+                            <option value="">Любой</option>
+                            @foreach ($propertyTypeLabels as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @elseif ($activeCategory === 'commercial')
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1 text-left">Сделка</label>
+                        <select wire:model="searchCommercialDealType" class="rounded-lg border-gray-300 text-sm">
+                            <option value="sale">Купить</option>
+                            <option value="rent">Снять</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1 text-left">Назначение</label>
+                        <select wire:model="searchPurposeType" class="rounded-lg border-gray-300 text-sm">
+                            <option value="">Любое</option>
+                            @foreach ($purposeTypeLabels as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @else
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1 text-left">Тип пространства</label>
+                        <select wire:model="searchWorkspaceType" class="rounded-lg border-gray-300 text-sm">
+                            <option value="">Любой</option>
+                            @foreach ($workspaceTypeLabels as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
                 <div>
                     <x-primary-button type="submit">Найти</x-primary-button>
                 </div>
