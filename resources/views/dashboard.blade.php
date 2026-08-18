@@ -21,7 +21,7 @@
                     </a>
                 </div>
 
-                @php($listings = auth()->user()->residentialProperties()->latest()->get())
+                @php($listings = auth()->user()->residentialProperties()->with('mainPhoto')->latest()->get())
 
                 @if ($listings->isEmpty())
                     <p class="text-gray-500 text-sm">У вас пока нет объявлений.</p>
@@ -29,13 +29,16 @@
                     <div class="divide-y">
                         @foreach ($listings as $listing)
                             <div class="py-4 flex items-center justify-between gap-4">
-                                <div>
-                                    <div class="font-medium">{{ number_format($listing->price, 0, '', ' ') }} ₽ · {{ $listing->address }}</div>
-                                    <div class="text-sm text-gray-500">
-                                        {{ $listing->property_type_label }} · {{ $listing->deal_type_label }}
-                                        @if ($listing->status === 'rejected' && $listing->rejection_reason)
-                                            · <span class="text-red-600">Причина отклонения: {{ $listing->rejection_reason }}</span>
-                                        @endif
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <x-listing-thumb :photo="$listing->mainPhoto" />
+                                    <div class="min-w-0">
+                                        <div class="font-medium">{{ number_format($listing->price, 0, '', ' ') }} ₽ · {{ $listing->address }}</div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ $listing->property_type_label }} · {{ $listing->deal_type_label }}
+                                            @if ($listing->status === 'rejected' && $listing->rejection_reason)
+                                                · <span class="text-red-600">Причина отклонения: {{ $listing->rejection_reason }}</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3 shrink-0">
@@ -69,7 +72,7 @@
                     </a>
                 </div>
 
-                @php($commercialListings = auth()->user()->commercialProperties()->latest()->get())
+                @php($commercialListings = auth()->user()->commercialProperties()->with('mainPhoto')->latest()->get())
 
                 @if ($commercialListings->isEmpty())
                     <p class="text-gray-500 text-sm">У вас пока нет коммерческих объявлений.</p>
@@ -77,13 +80,16 @@
                     <div class="divide-y">
                         @foreach ($commercialListings as $listing)
                             <div class="py-4 flex items-center justify-between gap-4">
-                                <div>
-                                    <div class="font-medium">{{ number_format($listing->display_price ?? 0, 0, '', ' ') }} ₽ · {{ $listing->address }}</div>
-                                    <div class="text-sm text-gray-500">
-                                        {{ $listing->purpose_type_label }} · {{ $listing->deal_type_label }}
-                                        @if ($listing->status === 'rejected' && $listing->rejection_reason)
-                                            · <span class="text-red-600">Причина отклонения: {{ $listing->rejection_reason }}</span>
-                                        @endif
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <x-listing-thumb :photo="$listing->mainPhoto" />
+                                    <div class="min-w-0">
+                                        <div class="font-medium">{{ number_format($listing->display_price ?? 0, 0, '', ' ') }} ₽ · {{ $listing->address }}</div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ $listing->purpose_type_label }} · {{ $listing->deal_type_label }}
+                                            @if ($listing->status === 'rejected' && $listing->rejection_reason)
+                                                · <span class="text-red-600">Причина отклонения: {{ $listing->rejection_reason }}</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3 shrink-0">
@@ -117,7 +123,7 @@
                     </a>
                 </div>
 
-                @php($workspaceListings = auth()->user()->workspaces()->latest()->get())
+                @php($workspaceListings = auth()->user()->workspaces()->with('mainPhoto')->latest()->get())
 
                 @if ($workspaceListings->isEmpty())
                     <p class="text-gray-500 text-sm">У вас пока нет объявлений о рабочих пространствах.</p>
@@ -125,16 +131,19 @@
                     <div class="divide-y">
                         @foreach ($workspaceListings as $listing)
                             <div class="py-4 flex items-center justify-between gap-4">
-                                <div>
-                                    <div class="font-medium">
-                                        {{ $listing->display_price ? number_format($listing->display_price, 0, '', ' ') . ' ₽/' . $listing->cheapestPricing->period_label : 'Цена не указана' }}
-                                        · {{ $listing->address }}
-                                    </div>
-                                    <div class="text-sm text-gray-500">
-                                        {{ $listing->workspace_type_label }}
-                                        @if ($listing->status === 'rejected' && $listing->rejection_reason)
-                                            · <span class="text-red-600">Причина отклонения: {{ $listing->rejection_reason }}</span>
-                                        @endif
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <x-listing-thumb :photo="$listing->mainPhoto" />
+                                    <div class="min-w-0">
+                                        <div class="font-medium">
+                                            {{ $listing->display_price ? number_format($listing->display_price, 0, '', ' ') . ' ₽/' . $listing->cheapestPricing->period_label : 'Цена не указана' }}
+                                            · {{ $listing->address }}
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ $listing->workspace_type_label }}
+                                            @if ($listing->status === 'rejected' && $listing->rejection_reason)
+                                                · <span class="text-red-600">Причина отклонения: {{ $listing->rejection_reason }}</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3 shrink-0">
