@@ -1,7 +1,11 @@
 @props(['pins' => [], 'selectable' => false])
 
 @if (config('services.yandex_maps.api_key'))
-    <div wire:ignore x-data="yandexMap(@js($pins), @js(config('services.yandex_maps.api_key')), @js($selectable))" x-init="init($refs.mapCanvas)">
+    {{-- x-init вызывает initMap(), а не init() — см. подробный комментарий
+         в resources/js/yandex-map.js: имя `init` зарезервировано Alpine
+         и автоматически вызывается им без аргументов, что раньше ломало
+         инициализацию карты (el === undefined при автовызове). --}}
+    <div wire:ignore x-data="yandexMap(@js($pins), @js(config('services.yandex_maps.api_key')), @js($selectable))" x-init="initMap($refs.mapCanvas)">
         @if ($selectable)
             {{-- Эпик 19 (Веха 2): выделение области на карте (MySQL spatial) --}}
             <div class="flex flex-wrap items-center gap-3 mb-2 text-sm">

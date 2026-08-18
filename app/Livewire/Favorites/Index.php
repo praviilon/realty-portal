@@ -48,7 +48,7 @@ class Index extends Component
         $favorites = Favorite::query()
             ->where('user_id', auth()->id())
             ->where('favoritable_type', $type)
-            ->with('favoritable')
+            ->with('favoritable.mainPhoto')
             ->latest('added_at')
             ->get()
             ->filter(fn (Favorite $favorite) => $favorite->favoritable !== null);

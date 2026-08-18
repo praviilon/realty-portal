@@ -26,6 +26,15 @@
             <div class="overflow-x-auto bg-white rounded-xl shadow">
                 <table class="min-w-full text-sm">
                     <tbody>
+                        <tr class="border-b bg-gray-50">
+                            <td class="p-4 font-medium text-gray-500 w-40">Фото</td>
+                            @foreach ($items as $item)
+                                @php($listing = $item->comparable)
+                                <td class="p-4 align-top">
+                                    <x-listing-thumb :photo="$listing->mainPhoto" />
+                                </td>
+                            @endforeach
+                        </tr>
                         <tr class="border-b">
                             <td class="p-4 font-medium text-gray-500 w-40">Объявление</td>
                             @foreach ($items as $item)

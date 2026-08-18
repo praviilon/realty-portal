@@ -73,7 +73,10 @@ new #[Layout('layouts.guest')] class extends Component
         <!-- Phone -->
         <div class="mt-4">
             <x-input-label for="phone" :value="__('Телефон (необязательно)')" />
-            <x-text-input wire:model="phone" x-mask="'+7 (999) 999-99-99'" id="phone" class="block mt-1 w-full" type="tel" name="phone" placeholder="+7 (___) ___-__-__" autocomplete="tel" />
+            {{-- См. подробный комментарий в profile/update-profile-information-form.blade.php:
+                 паттерн x-mask должен быть без обрамляющих JS-кавычек, иначе кавычки
+                 попадают в саму маску и портят итоговое значение (апостроф перед номером). --}}
+            <x-text-input wire:model="phone" x-mask="+7 (999) 999-99-99" id="phone" class="block mt-1 w-full" type="tel" name="phone" placeholder="+7 (___) ___-__-__" autocomplete="tel" />
             <x-input-error :messages="$errors->get('phone')" class="mt-2" />
         </div>
 

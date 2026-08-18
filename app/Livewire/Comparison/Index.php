@@ -74,7 +74,7 @@ class Index extends Component
         $list = ComparisonList::query()
             ->where('user_id', auth()->id())
             ->where('list_type', $this->tab)
-            ->with(['items.comparable'])
+            ->with(['items.comparable.mainPhoto'])
             ->first();
 
         $items = $list

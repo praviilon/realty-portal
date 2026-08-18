@@ -10,11 +10,15 @@
  *  - Yandex Maps JS API 3.0 (тот же скрипт, что и в resources/js/yandex-map.js)
  *    — превью-карта с меткой, кликабельной для уточнения точки.
  *
- * ВАЖНО: как и yandex-map.js, этот код не был протестирован в реальном
- * браузере с настоящим YANDEX_MAPS_API_KEY (песочница без доступа в
- * интернет к api-maps.yandex.ru и geocode-maps.yandex.ru). Логика написана
- * по документации API — перед продакшеном проверьте визуально после того,
- * как получите ключ (раздел 7.5 плана).
+ * ИСПРАВЛЕНО (доработка после Вехи 3, п.4 — карта нигде не работала даже с
+ * реальным ключом): метод инициализации был назван `init()`, что совпадает
+ * со служебным именем — Alpine автоматически вызывает метод `init` у любого
+ * x-data объекта сразу после его создания, ещё до обработки директивы
+ * x-init. Из-за этого `init()` вызывался дважды подряд (один раз Alpine'ом
+ * автоматически, второй раз — явно через x-init="init()"), что означало
+ * двойную загрузку скрипта Yandex Maps API и создание двух карт поверх
+ * одного и того же контейнера. Переименовано в `initMap()`, чтобы вызов
+ * происходил ровно один раз — так, как явно указано в x-init.
  */
 function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
     return {
@@ -27,7 +31,7 @@ function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
         map: null,
         marker: null,
 
-        init() {
+        initMap() {
             this.loadScript()
                 .then(() => window.ymaps3.ready)
                 .then(() => this.renderMap())

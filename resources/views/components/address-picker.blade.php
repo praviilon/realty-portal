@@ -12,7 +12,7 @@
     <div
         wire:ignore
         x-data="addressGeocoder(@js($address), @js($lat), @js($lng), @js(config('services.yandex_maps.api_key')))"
-        x-init="init()"
+        x-init="initMap()"
         class="mt-3"
     >
         <div class="relative">

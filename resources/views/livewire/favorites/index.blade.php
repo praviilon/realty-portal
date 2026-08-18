@@ -26,12 +26,15 @@
                     <a href="{{ $showRoute }}" wire:navigate class="absolute inset-0 z-0" aria-label="Открыть объявление"></a>
 
                     <div class="relative z-10 flex items-start justify-between gap-3 pointer-events-none">
-                        <div>
-                            <div class="font-semibold text-lg">
-                                {{ $tab === 'workspace' ? 'от ' : '' }}{{ number_format($price ?? 0, 0, '', ' ') }} ₽{{ $tab === 'commercial' && $listing->deal_type === 'rent' ? '/мес.' : '' }}
+                        <div class="flex gap-3 min-w-0">
+                            <x-listing-thumb :photo="$listing->mainPhoto" />
+                            <div class="min-w-0">
+                                <div class="font-semibold text-lg">
+                                    {{ $tab === 'workspace' ? 'от ' : '' }}{{ number_format($price ?? 0, 0, '', ' ') }} ₽{{ $tab === 'commercial' && $listing->deal_type === 'rent' ? '/мес.' : '' }}
+                                </div>
+                                <div class="text-gray-600 text-sm mt-1">{{ $listing->address }}</div>
+                                <div class="text-gray-500 text-sm">{{ $listing->area }} м²</div>
                             </div>
-                            <div class="text-gray-600 text-sm mt-1">{{ $listing->address }}</div>
-                            <div class="text-gray-500 text-sm">{{ $listing->area }} м²</div>
                         </div>
 
                         <div class="pointer-events-auto">
