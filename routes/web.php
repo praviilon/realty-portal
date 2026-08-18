@@ -15,6 +15,7 @@ use App\Livewire\Property\Show as ResidentialPropertyShow;
 use App\Livewire\Catalog\WorkspaceSearch;
 use App\Livewire\Workspace\CreateWizard as WorkspaceWizard;
 use App\Livewire\Workspace\Show as WorkspaceShow;
+use App\Http\Controllers\ListingUnpublishController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomePage::class)->name('home');
@@ -56,6 +57,13 @@ Route::middleware(['auth'])->group(function () {
     // Эпик 23 (Веха 3): рабочие пространства — та же схема маршрутов.
     Route::get('/account/workspaces/create', WorkspaceWizard::class)->name('workspace.create');
     Route::get('/account/workspaces/{workspace}/edit', WorkspaceWizard::class)->name('workspace.edit');
+
+    // Доработка по просьбе пользователя: снятие собственного объявления с
+    // публикации ("в архив") прямо из личного кабинета, без обращения к
+    // администратору — см. подробности в ListingUnpublishController.
+    Route::post('/account/listings/{residentialProperty}/unpublish', [ListingUnpublishController::class, 'residential'])->name('residential.unpublish');
+    Route::post('/account/commercial-listings/{commercialProperty}/unpublish', [ListingUnpublishController::class, 'commercial'])->name('commercial.unpublish');
+    Route::post('/account/workspaces/{workspace}/unpublish', [ListingUnpublishController::class, 'workspace'])->name('workspace.unpublish');
 
     Route::get('/account/chats', ChatInbox::class)->name('chat.index');
     Route::get('/account/chats/{chat}', ChatThread::class)->name('chat.show');
