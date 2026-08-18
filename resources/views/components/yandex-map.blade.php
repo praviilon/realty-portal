@@ -37,8 +37,19 @@
              загрузке рисуется отдельным слоем ПОВЕРХ карты, а не вместо неё. --}}
         <div class="relative">
             <div x-ref="mapCanvas" {{ $attributes->merge(['class' => 'w-full h-96 rounded-xl overflow-hidden border border-gray-200']) }}></div>
-            <div x-show="!mapReady" x-cloak class="absolute inset-0 w-full h-96 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-sm bg-gray-50">
+            {{-- ИСПРАВЛЕНО (разбор регрессии "DomContext: attaching to
+                 entity with destroyed DomContext" — см. createMapWithRetry()
+                 в resources/js/yandex-map.js): раньше при сбое создания
+                 карты плейсхолдер "Загрузка карты…" не снимался никогда.
+                 Теперь после нескольких неудачных попыток показываем явное
+                 сообщение об ошибке с кнопкой "Обновить страницу" вместо
+                 вечной надписи о загрузке. --}}
+            <div x-show="!mapReady && !mapFailed" x-cloak class="absolute inset-0 w-full h-96 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-sm bg-gray-50">
                 Загрузка карты…
+            </div>
+            <div x-show="mapFailed" x-cloak class="absolute inset-0 w-full h-96 rounded-xl border border-gray-200 flex flex-col items-center justify-center gap-2 text-gray-500 text-sm bg-gray-50 text-center p-4">
+                <span>Не удалось загрузить карту.</span>
+                <button type="button" @click="location.reload()" class="text-primary-600 hover:underline">Обновить страницу</button>
             </div>
         </div>
     </div>

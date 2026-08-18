@@ -35,6 +35,7 @@ function yandexMap(initialPins, apiKey, selectable) {
     return {
         map: null,
         mapReady: false,
+        mapFailed: false,
         markers: [],
         pins: initialPins || [],
         selectable: !!selectable,
@@ -135,6 +136,7 @@ function yandexMap(initialPins, apiKey, selectable) {
             }
 
             this.mapReady = false;
+            this.mapFailed = false;
         },
 
         /**
@@ -217,30 +219,72 @@ function yandexMap(initialPins, apiKey, selectable) {
             });
         },
 
-        async renderMap(el) {
-            const {YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapListener} = window.ymaps3;
+        /**
+         * ИСПРАВЛЕНО (продолжение разбора регрессии "DomContext: attaching
+         * to entity with destroyed DomContext" — после предыдущей попытки
+         * фикса пользователь подтвердил, что ошибка осталась НА ВСЕХ
+         * страницах с картой, включая те, где нет никаких дублирующихся
+         * координат, то есть версия про "вырожденные bounds" объясняла
+         * от силы один из возможных путей к этой ошибке, но НЕ основную
+         * причину). Плюс новая, более информативная ошибка на странице
+         * подбора адреса при клике по подсказке: "You are using default
+         * data source for features, but it's not on added to map. Maybe
+         * you forgot to add YMapDefaultFeaturesLayer" — хотя
+         * YMapDefaultFeaturesLayer явно добавляется. Это означает, что сам
+         * addChild(YMapDefaultFeaturesLayer()) в какой-то момент падает
+         * (именно с ошибкой DomContext, судя по идентичному стеку вызовов
+         * addChild -> _onUpdate -> ... -> DomContextOnDescendantMoved), но
+         * раньше это никак не ловилось: promise-цепочка просто прерывалась,
+         * this.map оставался "наполовину созданным" объектом (сам YMap
+         * создан, но без реально прикреплённого слоя данных), из-за чего
+         * ЛЮБАЯ последующая попытка добавить что-то, зависящее от этого
+         * слоя (маркер), падала со второй ошибкой.
+         *
+         * Официальная документация Yandex Maps API 3.0 показывает именно
+         * такую синхронную последовательность addChild() как штатную (без
+         * задержек/await), так что похоже на нестабильность/гонку внутри
+         * самого API в конкретных условиях, а не на ошибку в порядке
+         * вызовов с нашей стороны. Раз причина на стороне стороннего кода,
+         * которую нельзя обойти "правильным" вызовом API, делаем создание
+         * карты УСТОЙЧИВЫМ к таким сбоям: несколько попыток подряд
+         * (createMapWithRetry ниже), и, если карта так и не создалась —
+         * явное состояние "не удалось" (mapFailed) вместо вечной надписи
+         * "Загрузка карты…", с кнопкой "Обновить страницу" в блейд-шаблоне.
+         */
+        async createMapWithRetry(el, attempt = 1) {
+            const {YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer} = window.ymaps3;
+            const maxAttempts = 3;
 
-            // ИСПРАВЛЕНО (регрессия после доработки "карта каталога не
-            // показывала все объекты"): раньше вычисленные bounds по ВСЕМ
-            // пинам передавались прямо в конструктор new YMap(...). На
-            // реальном API (в отличие от моих упрощённых моков в тестах) это
-            // привело к падению карты с ошибкой Yandex Maps API "DomContext:
-            // attaching to entity with destroyed DomContext" прямо во время
-            // создания карты — она не появлялась вообще, а "Загрузка
-            // карты…" висела вечно, на ВСЕХ страницах с картой сразу.
-            //
-            // Теперь карта сначала создаётся с заведомо безопасным location
-            // (center/zoom — та же логика, что была ДО доработки с bounds),
-            // и только ПОСЛЕ того, как карта и её базовые слои существуют и
-            // this.mapReady уже true (плейсхолдер "Загрузка карты…" снят),
-            // отдельным вызовом setLocation() пробуем вписать в область
-            // видимости ВСЕ пины. Если это почему-либо не получится —
-            // ошибка ловится ниже и просто логируется: карта всё равно
-            // остаётся рабочей, просто не идеально отцентрированной, вместо
-            // того чтобы не появиться вообще.
-            this.map = new YMap(el, {location: this.safeInitialLocation()});
-            this.map.addChild(new YMapDefaultSchemeLayer());
-            this.map.addChild(new YMapDefaultFeaturesLayer());
+            try {
+                const map = new YMap(el, {location: this.safeInitialLocation()});
+                map.addChild(new YMapDefaultSchemeLayer());
+                map.addChild(new YMapDefaultFeaturesLayer());
+
+                return map;
+            } catch (error) {
+                console.error(`Не удалось создать карту (попытка ${attempt} из ${maxAttempts}):`, error);
+
+                if (attempt >= maxAttempts) {
+                    throw error;
+                }
+
+                await new Promise((resolve) => setTimeout(resolve, attempt * 300));
+
+                return this.createMapWithRetry(el, attempt + 1);
+            }
+        },
+
+        async renderMap(el) {
+            const {YMapListener} = window.ymaps3;
+
+            try {
+                this.map = await this.createMapWithRetry(el);
+            } catch (error) {
+                console.error('Карта Yandex Maps не смогла создаться после нескольких попыток:', error);
+                this.mapFailed = true;
+
+                return;
+            }
 
             // Карта технически существует и видна — снимаем плейсхолдер
             // "Загрузка карты…" уже здесь, не дожидаясь необязательных шагов

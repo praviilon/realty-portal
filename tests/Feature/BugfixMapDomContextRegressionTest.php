@@ -154,4 +154,76 @@ class BugfixMapDomContextRegressionTest extends TestCase
             $js
         );
     }
+
+    /**
+     * Продолжение разбора той же регрессии: после первого фикса (вырожденные
+     * bounds) пользователь подтвердил, что ошибка "DomContext: attaching to
+     * entity with destroyed DomContext" осталась НА ВСЕХ страницах с картой
+     * — то есть основная причина была в чём-то универсальном, а не в
+     * конкретных данных о пинах. Плюс новая, более информативная ошибка на
+     * странице подбора адреса при клике по подсказке: "You are using
+     * default data source for features, but it's not on added to map" —
+     * воспроизведено и подтверждено через Playwright (см.
+     * /tmp/repro-flaky-featureslayer.js и /tmp/repro-geocoder-half-broken.js):
+     * если addChild(YMapDefaultFeaturesLayer()) падает, this.map раньше всё
+     * равно оставался "наполовину созданным" truthy-объектом (сам YMap
+     * создан, слой данных — нет), и любая последующая попытка добавить
+     * маркер падала со второй ошибкой. Теперь this.map присваивается ТОЛЬКО
+     * после того, как оба базовых слоя гарантированно успешно добавлены — с
+     * несколькими попытками (createMapWithRetry), и явным состоянием
+     * mapFailed вместо вечной "Загрузка карты…", если все попытки исчерпаны.
+     */
+    public function test_yandex_map_js_retries_map_creation_and_exposes_failed_state(): void
+    {
+        $js = file_get_contents(resource_path('js/yandex-map.js'));
+
+        $this->assertStringContainsString('mapFailed: false,', $js);
+        $this->assertStringContainsString('async createMapWithRetry(el, attempt = 1) {', $js);
+        $this->assertStringContainsString('maxAttempts = 3', $js);
+        $this->assertStringContainsString('this.createMapWithRetry(el, attempt + 1)', $js);
+
+        // this.map присваивается результатом createMapWithRetry() и ТОЛЬКО
+        // внутри try/catch, который при неудаче выставляет mapFailed вместо
+        // того, чтобы оставить this.map "наполовину созданным".
+        $this->assertMatchesRegularExpression(
+            '/try \{\s*this\.map = await this\.createMapWithRetry\(el\);\s*\} catch \(error\) \{.*?this\.mapFailed = true;/s',
+            $js
+        );
+    }
+
+    public function test_address_geocoder_js_retries_map_creation_and_exposes_failed_state(): void
+    {
+        $js = file_get_contents(resource_path('js/address-geocoder.js'));
+
+        $this->assertStringContainsString('mapFailed: false,', $js);
+        $this->assertStringContainsString('async createMapWithRetry(center, zoom, attempt = 1) {', $js);
+        $this->assertMatchesRegularExpression(
+            '/try \{\s*this\.map = await this\.createMapWithRetry\(center, hasInitialPosition \? 15 : 10\);\s*\} catch \(error\) \{.*?this\.mapFailed = true;/s',
+            $js
+        );
+    }
+
+    public function test_address_geocoder_place_marker_also_guards_on_map_ready(): void
+    {
+        $js = file_get_contents(resource_path('js/address-geocoder.js'));
+
+        // Раньше placeMarker() проверял только this.map — этого было
+        // недостаточно, если карта "наполовину создана" (см. описание
+        // класса выше).
+        $this->assertMatchesRegularExpression(
+            '/placeMarker\(lat, lng\)\s*\{.*?if \(!this\.map \|\| !this\.mapReady\)\s*\{\s*return;/s',
+            $js
+        );
+    }
+
+    public function test_map_failed_state_is_shown_in_blade_templates_with_reload_option(): void
+    {
+        $catalogMap = file_get_contents(resource_path('views/components/yandex-map.blade.php'));
+        $addressPicker = file_get_contents(resource_path('views/components/address-picker.blade.php'));
+
+        foreach ([$catalogMap, $addressPicker] as $content) {
+            $this->assertStringContainsString('mapFailed', $content);
+            $this->assertStringContainsString('location.reload()', $content);
+        }
+    }
 }

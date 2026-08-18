@@ -68,10 +68,14 @@ class BugfixMapRaceConditionAndBoundsTest extends TestCase
     {
         $js = file_get_contents(resource_path('js/address-geocoder.js'));
 
+        // Изначально здесь проверялся только this.map. Позже (см.
+        // BugfixMapDomContextRegressionTest) выяснилось, что этого
+        // недостаточно — this.map мог быть "наполовину созданным" объектом,
+        // поэтому проверка расширена до this.map И this.mapReady.
         $this->assertMatchesRegularExpression(
-            '/placeMarker\(lat, lng\)\s*\{[^}]*if \(!this\.map\)\s*\{\s*return;/s',
+            '/placeMarker\(lat, lng\)\s*\{.*?if \(!this\.map \|\| !this\.mapReady\)\s*\{\s*return;/s',
             $js,
-            'placeMarker() должен безопасно завершаться, если this.map ещё не создан (карта грузится асинхронно)'
+            'placeMarker() должен безопасно завершаться, если карта ещё не готова (грузится асинхронно или не удалось создать)'
         );
     }
 

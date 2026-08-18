@@ -41,8 +41,17 @@
              карта не инициализировалась в контейнере нулевого размера. --}}
         <div class="relative mt-3">
             <div x-ref="pickerMap" class="w-full h-56 rounded-xl overflow-hidden border border-gray-200"></div>
-            <div x-show="!mapReady" x-cloak class="absolute inset-0 w-full h-56 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-sm bg-gray-50">
+            {{-- ИСПРАВЛЕНО (см. createMapWithRetry() в
+                 resources/js/address-geocoder.js): при сбое создания карты
+                 показываем явное сообщение вместо вечной надписи "Загрузка
+                 карты…". Поля адреса/широты/долготы ниже всё равно остаются
+                 редактируемыми вручную, см. подсказку под картой. --}}
+            <div x-show="!mapReady && !mapFailed" x-cloak class="absolute inset-0 w-full h-56 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-sm bg-gray-50">
                 Загрузка карты…
+            </div>
+            <div x-show="mapFailed" x-cloak class="absolute inset-0 w-full h-56 rounded-xl border border-gray-200 flex flex-col items-center justify-center gap-2 text-gray-500 text-sm bg-gray-50 text-center p-4">
+                <span>Не удалось загрузить карту.</span>
+                <button type="button" @click="location.reload()" class="text-primary-600 hover:underline">Обновить страницу</button>
             </div>
         </div>
 

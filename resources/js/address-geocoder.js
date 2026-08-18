@@ -30,6 +30,7 @@ function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
         showSuggestions: false,
         map: null,
         mapReady: false,
+        mapFailed: false,
         marker: null,
 
         initMap() {
@@ -62,6 +63,7 @@ function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
             }
 
             this.mapReady = false;
+            this.mapFailed = false;
         },
 
         loadScript() {
@@ -78,24 +80,67 @@ function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
             });
         },
 
+        /**
+         * ИСПРАВЛЕНО (продолжение разбора регрессии "DomContext: attaching
+         * to entity with destroyed DomContext" — см. подробный комментарий в
+         * createMapWithRetry() в resources/js/yandex-map.js). Здесь эта же
+         * гонка проявляла себя ОСОБЕННО коварно: this.map присваивался ДО
+         * того, как мы знали, что addChild(YMapDefaultFeaturesLayer())
+         * реально успешно отработал. Если этот addChild падал (с той же
+         * ошибкой DomContext), исключение просто улетало наверх, но
+         * this.map оставался "наполовину созданным", truthy объектом — а
+         * placeMarker() проверяет только `if (!this.map)`, не mapReady.
+         * Из-за этого при выборе адреса из подсказки (setPosition ->
+         * placeMarker -> this.map.addChild(marker)) падала уже ВТОРАЯ,
+         * более информативная ошибка Yandex Maps API: "You are using
+         * default data source for features, but it's not on added to
+         * map" — то есть слой с данными объектов на самом деле не был
+         * прикреплён, хотя мы его добавляли. Теперь this.map присваивается
+         * ТОЛЬКО после того, как оба базовых слоя гарантированно успешно
+         * добавлены (с несколькими попытками — createMapWithRetry).
+         */
+        async createMapWithRetry(center, zoom, attempt = 1) {
+            const {YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer} = window.ymaps3;
+            const maxAttempts = 3;
+
+            try {
+                const map = new YMap(this.$refs.pickerMap, {location: {center, zoom}});
+                map.addChild(new YMapDefaultSchemeLayer());
+                map.addChild(new YMapDefaultFeaturesLayer());
+
+                return map;
+            } catch (error) {
+                console.error(`Не удалось создать карту (попытка ${attempt} из ${maxAttempts}):`, error);
+
+                if (attempt >= maxAttempts) {
+                    throw error;
+                }
+
+                await new Promise((resolve) => setTimeout(resolve, attempt * 300));
+
+                return this.createMapWithRetry(center, zoom, attempt + 1);
+            }
+        },
+
         async renderMap() {
-            const {YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapListener} = window.ymaps3;
+            const {YMapListener} = window.ymaps3;
 
             const hasInitialPosition = this.lat !== null && this.lng !== null;
             const center = hasInitialPosition ? [this.lng, this.lat] : [37.618423, 55.751244]; // Москва по умолчанию
 
-            this.map = new YMap(this.$refs.pickerMap, {location: {center, zoom: hasInitialPosition ? 15 : 10}});
-            this.map.addChild(new YMapDefaultSchemeLayer());
-            this.map.addChild(new YMapDefaultFeaturesLayer());
+            try {
+                this.map = await this.createMapWithRetry(center, hasInitialPosition ? 15 : 10);
+            } catch (error) {
+                console.error('Карта Yandex Maps не смогла создаться после нескольких попыток:', error);
+                this.mapFailed = true;
 
-            // ИСПРАВЛЕНО (по итогам разбора регрессии "DomContext: attaching
-            // to entity with destroyed DomContext" в resources/js/yandex-map.js
-            // — см. подробный комментарий там): карта считается готовой, как
-            // только она сама и базовые слои созданы. Необязательные шаги
-            // ниже (маркер выбранной точки, обработчик кликов) обёрнуты в
-            // try/catch и больше не могут оставить пользователя с вечной
-            // надписью "Загрузка карты…", если сами вдруг упадут на реальном
-            // API.
+                return;
+            }
+
+            // Необязательные шаги ниже (маркер выбранной точки, обработчик
+            // кликов) обёрнуты в try/catch и больше не могут оставить
+            // пользователя с вечной надписью "Загрузка карты…", если сами
+            // вдруг упадут на реальном API.
             this.mapReady = true;
 
             if (hasInitialPosition) {
@@ -146,7 +191,12 @@ function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
             // Теперь при отсутствующей карте просто ничего не рисуем: как
             // только renderMap() всё же завершится, он сам расставит маркер
             // по актуальным this.lat/this.lng (см. renderMap ниже).
-            if (!this.map) {
+            //
+            // Проверяем и mapReady тоже (не только this.map) — см.
+            // подробный комментарий в createMapWithRetry() выше: раньше
+            // this.map мог быть "наполовину созданным" объектом ещё ДО
+            // того, как мы узнавали, что базовые слои реально прикрепились.
+            if (!this.map || !this.mapReady) {
                 return;
             }
 
@@ -217,7 +267,7 @@ function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
             this.$wire.set('address', item.address);
             this.setPosition(item.lat, item.lng);
 
-            if (this.map) {
+            if (this.map && this.mapReady) {
                 try {
                     this.map.setLocation({center: [item.lng, item.lat], zoom: 15});
                 } catch (error) {
