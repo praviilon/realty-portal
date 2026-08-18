@@ -41,6 +41,29 @@ function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
                 });
         },
 
+        // ИСПРАВЛЕНО (по итогам разбора регрессии "DomContext: attaching to
+        // entity with destroyed DomContext" — см. подробный комментарий в
+        // resources/js/yandex-map.js): раньше JS-объект карты просто
+        // "бросался" при уходе со 2-го шага мастера создания объявления —
+        // сама Yandex Maps API никогда не узнавала, что её контейнер исчез.
+        // У YMap есть штатный метод destroy() именно для этого случая (см.
+        // документацию API 3.0, класс YMap) — вызываем его здесь (Alpine
+        // вызывает destroy() автоматически при удалении элемента, аналогично
+        // init()).
+        destroy() {
+            if (this.map) {
+                try {
+                    this.map.destroy();
+                } catch (error) {
+                    // Карта могла быть уже разрушена или её контейнер уже не
+                    // в DOM — это не критично, просто освобождаем ссылку.
+                }
+                this.map = null;
+            }
+
+            this.mapReady = false;
+        },
+
         loadScript() {
             if (window.ymaps3) {
                 return Promise.resolve();
@@ -65,20 +88,36 @@ function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
             this.map.addChild(new YMapDefaultSchemeLayer());
             this.map.addChild(new YMapDefaultFeaturesLayer());
 
+            // ИСПРАВЛЕНО (по итогам разбора регрессии "DomContext: attaching
+            // to entity with destroyed DomContext" в resources/js/yandex-map.js
+            // — см. подробный комментарий там): карта считается готовой, как
+            // только она сама и базовые слои созданы. Необязательные шаги
+            // ниже (маркер выбранной точки, обработчик кликов) обёрнуты в
+            // try/catch и больше не могут оставить пользователя с вечной
+            // надписью "Загрузка карты…", если сами вдруг упадут на реальном
+            // API.
+            this.mapReady = true;
+
             if (hasInitialPosition) {
-                this.placeMarker(this.lat, this.lng);
+                try {
+                    this.placeMarker(this.lat, this.lng);
+                } catch (error) {
+                    console.error('Не удалось отметить точку на карте:', error);
+                }
             }
 
             if (!YMapListener) {
                 console.error('YMapListener недоступен в window.ymaps3 — уточнение адреса кликом по карте не будет работать.');
             } else {
-                this.map.addChild(new YMapListener({
-                    layer: 'any',
-                    onClick: (_object, event) => this.handleMapClick(event),
-                }));
+                try {
+                    this.map.addChild(new YMapListener({
+                        layer: 'any',
+                        onClick: (_object, event) => this.handleMapClick(event),
+                    }));
+                } catch (error) {
+                    console.error('Не удалось включить уточнение адреса кликом по карте:', error);
+                }
             }
-
-            this.mapReady = true;
         },
 
         handleMapClick(event) {
@@ -179,7 +218,11 @@ function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
             this.setPosition(item.lat, item.lng);
 
             if (this.map) {
-                this.map.setLocation({center: [item.lng, item.lat], zoom: 15});
+                try {
+                    this.map.setLocation({center: [item.lng, item.lat], zoom: 15});
+                } catch (error) {
+                    console.error('Не удалось переместить карту к выбранному адресу:', error);
+                }
             }
         },
 

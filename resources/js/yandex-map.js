@@ -47,6 +47,8 @@ function yandexMap(initialPins, apiKey, selectable) {
         _pinsUpdatedHandler: null,
 
         initMap(el) {
+            this._el = el;
+
             this.loadScript(apiKey)
                 .then(() => window.ymaps3.ready)
                 .then(() => this.renderMap(el))
@@ -65,12 +67,45 @@ function yandexMap(initialPins, apiKey, selectable) {
             // удалении элемента — как и init(), но, в отличие от init(),
             // здесь нет дублирующего вызова через директиву, поэтому это
             // безопасно использовать).
+            //
+            // ИСПРАВЛЕНО (регрессия "DomContext: attaching to entity with
+            // destroyed DomContext" сразу после этой доработки): проверки
+            // this.map оказалось НЕДОСТАТОЧНО. this.map остаётся "живым"
+            // JS-объектом даже после того, как Livewire уже физически удалил
+            // его DOM-контейнер из документа — сам morph (удаление DOM)
+            // происходит СИНХРОННО, а наш destroy() ниже Alpine вызывает
+            // АСИНХРОННО (через MutationObserver, на один-два микротаска
+            // позже). Livewire-компонент каталога диспатчит
+            // catalog:pins-updated на КАЖДЫЙ свой рендер (см.
+            // app/Livewire/Catalog/Search.php), в том числе и на тот самый
+            // рендер, который скрывает карту при переключении на вкладку
+            // "Список" — если в этот узкий промежуток вызвать
+            // map.setLocation()/addChild() на карте, чей контейнер уже не в
+            // документе, Yandex Maps API падает именно с этой ошибкой (и
+            // получившийся плейсхолдер "Загрузка карты…" на СЛЕДУЮЩЕЙ карте
+            // уже никогда не снимается, если такая ошибка попадает в
+            // какой-то общий асинхронный процесс API). Теперь дополнительно
+            // проверяем this.mapReady и document.contains(this._el), а сам
+            // вызов обёрнут в try/catch как последний рубеж защиты.
             this._pinsUpdatedHandler = (event) => {
                 this.pins = event.detail?.pins ?? this.pins;
 
-                if (this.map) {
+                if (!this.map || !this.mapReady) {
+                    return;
+                }
+
+                if (!this._el || !document.contains(this._el)) {
+                    // Контейнер уже удалён из DOM, а Alpine ещё не успел
+                    // вызвать destroy() — подчищаем сами, не дожидаясь его.
+                    this.destroy();
+                    return;
+                }
+
+                try {
                     this.map.setLocation(this.computeLocation());
                     this.renderMarkers();
+                } catch (error) {
+                    console.error('Не удалось обновить карту по новым результатам поиска:', error);
                 }
             };
             window.addEventListener('catalog:pins-updated', this._pinsUpdatedHandler);
@@ -79,7 +114,27 @@ function yandexMap(initialPins, apiKey, selectable) {
         destroy() {
             if (this._pinsUpdatedHandler) {
                 window.removeEventListener('catalog:pins-updated', this._pinsUpdatedHandler);
+                this._pinsUpdatedHandler = null;
             }
+
+            // ИСПРАВЛЕНО (та же регрессия, что и выше): раньше JS-объект
+            // карты просто "бросался" при удалении компонента — сама Yandex
+            // Maps API никогда не узнавала, что её контейнер исчез. У YMap
+            // есть штатный метод destroy() именно для этого случая (см.
+            // документацию API 3.0, класс YMap) — вызываем его, чтобы карта
+            // корректно освободила все свои внутренние ресурсы, вместо того
+            // чтобы полагаться на то, что мы просто перестанем её трогать.
+            if (this.map) {
+                try {
+                    this.map.destroy();
+                } catch (error) {
+                    // Карта могла быть уже разрушена или её контейнер уже не
+                    // в DOM — это не критично, просто освобождаем ссылку.
+                }
+                this.map = null;
+            }
+
+            this.mapReady = false;
         },
 
         /**
@@ -116,7 +171,36 @@ function yandexMap(initialPins, apiKey, selectable) {
                 maxLng = Math.max(maxLng, lng);
             });
 
+            // ЗАЩИТА (по итогам разбора регрессии "DomContext: attaching to
+            // entity with destroyed DomContext"): если несколько объявлений
+            // указаны с абсолютно одинаковыми координатами (например, один
+            // дом), min и max совпадают — область получается нулевой
+            // площади. Похоже, что именно вычисление зума/масштаба под такую
+            // вырожденную область могло приводить к падению Yandex Maps API.
+            // В этом случае просто центрируемся на этой точке, как при
+            // одном пине, вместо того чтобы передавать API некорректный
+            // bounds.
+            if (minLat === maxLat && minLng === maxLng) {
+                return {center: [minLng, minLat], zoom: 14};
+            }
+
             return {bounds: [[minLng, minLat], [maxLng, maxLat]]};
+        },
+
+        // Локация для САМОГО СОЗДАНИЯ карты — сознательно всегда center/zoom,
+        // никогда bounds (см. подробный комментарий в renderMap() ниже: risky
+        // bounds-логику мы применяем ОТДЕЛЬНЫМ вызовом setLocation() уже
+        // после того, как карта и базовые слои существуют, а не в момент
+        // конструктора).
+        safeInitialLocation() {
+            if (!this.pins.length) {
+                return {center: [37.618423, 55.751244], zoom: 10};
+            }
+
+            return {
+                center: [Number(this.pins[0].lng), Number(this.pins[0].lat)],
+                zoom: this.pins.length === 1 ? 14 : 10,
+            };
         },
 
         loadScript(apiKey) {
@@ -136,11 +220,48 @@ function yandexMap(initialPins, apiKey, selectable) {
         async renderMap(el) {
             const {YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapListener} = window.ymaps3;
 
-            this.map = new YMap(el, {location: this.computeLocation()});
+            // ИСПРАВЛЕНО (регрессия после доработки "карта каталога не
+            // показывала все объекты"): раньше вычисленные bounds по ВСЕМ
+            // пинам передавались прямо в конструктор new YMap(...). На
+            // реальном API (в отличие от моих упрощённых моков в тестах) это
+            // привело к падению карты с ошибкой Yandex Maps API "DomContext:
+            // attaching to entity with destroyed DomContext" прямо во время
+            // создания карты — она не появлялась вообще, а "Загрузка
+            // карты…" висела вечно, на ВСЕХ страницах с картой сразу.
+            //
+            // Теперь карта сначала создаётся с заведомо безопасным location
+            // (center/zoom — та же логика, что была ДО доработки с bounds),
+            // и только ПОСЛЕ того, как карта и её базовые слои существуют и
+            // this.mapReady уже true (плейсхолдер "Загрузка карты…" снят),
+            // отдельным вызовом setLocation() пробуем вписать в область
+            // видимости ВСЕ пины. Если это почему-либо не получится —
+            // ошибка ловится ниже и просто логируется: карта всё равно
+            // остаётся рабочей, просто не идеально отцентрированной, вместо
+            // того чтобы не появиться вообще.
+            this.map = new YMap(el, {location: this.safeInitialLocation()});
             this.map.addChild(new YMapDefaultSchemeLayer());
             this.map.addChild(new YMapDefaultFeaturesLayer());
 
-            this.renderMarkers();
+            // Карта технически существует и видна — снимаем плейсхолдер
+            // "Загрузка карты…" уже здесь, не дожидаясь необязательных шагов
+            // ниже (маркеры, bounds по всем пинам, area-listener). Ни один
+            // из них теперь не может оставить пользователя с вечной
+            // надписью "Загрузка карты…", если сама карта создалась успешно.
+            this.mapReady = true;
+
+            try {
+                this.renderMarkers();
+            } catch (error) {
+                console.error('Не удалось расставить метки объявлений на карте:', error);
+            }
+
+            if (this.pins.length >= 2) {
+                try {
+                    this.map.setLocation(this.computeLocation());
+                } catch (error) {
+                    console.error('Не удалось вписать все объявления в область видимости карты:', error);
+                }
+            }
 
             if (this.selectable) {
                 if (!YMapListener) {
@@ -150,20 +271,17 @@ function yandexMap(initialPins, apiKey, selectable) {
                     // построчной отладкой. Теперь хотя бы видно в консоли.
                     console.error('YMapListener недоступен в window.ymaps3 — выделение области на карте не будет работать.');
                 } else {
-                    this.areaListener = new YMapListener({
-                        layer: 'any',
-                        onClick: (_object, event) => this.handleMapClick(event),
-                    });
-                    this.map.addChild(this.areaListener);
+                    try {
+                        this.areaListener = new YMapListener({
+                            layer: 'any',
+                            onClick: (_object, event) => this.handleMapClick(event),
+                        });
+                        this.map.addChild(this.areaListener);
+                    } catch (error) {
+                        console.error('Не удалось включить выделение области на карте:', error);
+                    }
                 }
             }
-
-            // Кнопка "Выделить область" и клики по карте технически ничего
-            // не ломают до этого момента (карта просто ещё не существует),
-            // но пользователю explicitly видно, что карта ещё грузится —
-            // раньше на её месте был просто пустой прямоугольник без
-            // подсказки, из-за сети это могло занимать заметное время.
-            this.mapReady = true;
         },
 
         renderMarkers() {
