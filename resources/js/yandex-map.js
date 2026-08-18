@@ -34,6 +34,7 @@
 function yandexMap(initialPins, apiKey, selectable) {
     return {
         map: null,
+        mapReady: false,
         markers: [],
         pins: initialPins || [],
         selectable: !!selectable,
@@ -43,6 +44,7 @@ function yandexMap(initialPins, apiKey, selectable) {
         areaClickPoints: [],
         areaFeature: null,
         areaListener: null,
+        _pinsUpdatedHandler: null,
 
         initMap(el) {
             this.loadScript(apiKey)
@@ -52,13 +54,69 @@ function yandexMap(initialPins, apiKey, selectable) {
                     console.error('Не удалось загрузить Yandex Maps JS API 3.0:', error);
                 });
 
-            window.addEventListener('catalog:pins-updated', (event) => {
+            // ИСПРАВЛЕНО (доработка "объекты на карте не отображаются"):
+            // переключение вкладок "Список"/"Карта" уничтожает и заново
+            // создаёт этот Alpine-компонент (блок под x-if/@if($view==='map')),
+            // но старый window.addEventListener никогда не снимался — при
+            // каждом повторном открытии вкладки "Карта" накапливался ещё один
+            // слушатель, привязанный к уже уничтожённому this (this.map там
+            // навсегда null). Храним ссылку на обработчик и снимаем её в
+            // destroy() (Alpine вызывает этот метод автоматически при
+            // удалении элемента — как и init(), но, в отличие от init(),
+            // здесь нет дублирующего вызова через директиву, поэтому это
+            // безопасно использовать).
+            this._pinsUpdatedHandler = (event) => {
                 this.pins = event.detail?.pins ?? this.pins;
 
                 if (this.map) {
+                    this.map.setLocation(this.computeLocation());
                     this.renderMarkers();
                 }
+            };
+            window.addEventListener('catalog:pins-updated', this._pinsUpdatedHandler);
+        },
+
+        destroy() {
+            if (this._pinsUpdatedHandler) {
+                window.removeEventListener('catalog:pins-updated', this._pinsUpdatedHandler);
+            }
+        },
+
+        /**
+         * ИСПРАВЛЕНО (доработка "объекты на карте не отображаются"): раньше
+         * карта всегда центрировалась на ПЕРВОМ пине с фиксированным zoom=10.
+         * При объявлениях, разбросанных по разным районам/городам, это легко
+         * оставляло большинство пинов ЗА пределами видимой области — они
+         * технически отрисовывались, но пользователь их просто не видел без
+         * ручного скролла/зума карты, что выглядело как "объекты не
+         * отображаются". Теперь при 2+ пинах карта показывает область,
+         * вмещающую ВСЕ точки (bounds), а не только первую.
+         */
+        computeLocation() {
+            if (!this.pins.length) {
+                return {center: [37.618423, 55.751244], zoom: 10}; // Москва, если объявлений ещё нет
+            }
+
+            if (this.pins.length === 1) {
+                return {center: [Number(this.pins[0].lng), Number(this.pins[0].lat)], zoom: 14};
+            }
+
+            let minLat = Number(this.pins[0].lat);
+            let maxLat = minLat;
+            let minLng = Number(this.pins[0].lng);
+            let maxLng = minLng;
+
+            this.pins.forEach((pin) => {
+                const lat = Number(pin.lat);
+                const lng = Number(pin.lng);
+
+                minLat = Math.min(minLat, lat);
+                maxLat = Math.max(maxLat, lat);
+                minLng = Math.min(minLng, lng);
+                maxLng = Math.max(maxLng, lng);
             });
+
+            return {bounds: [[minLng, minLat], [maxLng, maxLat]]};
         },
 
         loadScript(apiKey) {
@@ -78,23 +136,34 @@ function yandexMap(initialPins, apiKey, selectable) {
         async renderMap(el) {
             const {YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapListener} = window.ymaps3;
 
-            const center = this.pins.length
-                ? [Number(this.pins[0].lng), Number(this.pins[0].lat)]
-                : [37.618423, 55.751244]; // Москва, если объявлений ещё нет
-
-            this.map = new YMap(el, {location: {center, zoom: 10}});
+            this.map = new YMap(el, {location: this.computeLocation()});
             this.map.addChild(new YMapDefaultSchemeLayer());
             this.map.addChild(new YMapDefaultFeaturesLayer());
 
             this.renderMarkers();
 
-            if (this.selectable && YMapListener) {
-                this.areaListener = new YMapListener({
-                    layer: 'any',
-                    onClick: (_object, event) => this.handleMapClick(event),
-                });
-                this.map.addChild(this.areaListener);
+            if (this.selectable) {
+                if (!YMapListener) {
+                    // Раньше это молча ничего не делало — кнопка "Выделить
+                    // область" переключалась, но клики по карте никогда не
+                    // обрабатывались, и понять причину можно было только
+                    // построчной отладкой. Теперь хотя бы видно в консоли.
+                    console.error('YMapListener недоступен в window.ymaps3 — выделение области на карте не будет работать.');
+                } else {
+                    this.areaListener = new YMapListener({
+                        layer: 'any',
+                        onClick: (_object, event) => this.handleMapClick(event),
+                    });
+                    this.map.addChild(this.areaListener);
+                }
             }
+
+            // Кнопка "Выделить область" и клики по карте технически ничего
+            // не ломают до этого момента (карта просто ещё не существует),
+            // но пользователю explicitly видно, что карта ещё грузится —
+            // раньше на её месте был просто пустой прямоугольник без
+            // подсказки, из-за сети это могло занимать заметное время.
+            this.mapReady = true;
         },
 
         renderMarkers() {

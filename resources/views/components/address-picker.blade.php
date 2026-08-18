@@ -36,10 +36,19 @@
             </ul>
         </div>
 
-        <div x-ref="pickerMap" class="w-full h-56 rounded-xl overflow-hidden border border-gray-200 mt-3"></div>
+        {{-- Как и в yandex-map.blade.php: x-ref="pickerMap" всегда видим (без
+             x-show/display:none), подсказку о загрузке рисуем поверх, чтобы
+             карта не инициализировалась в контейнере нулевого размера. --}}
+        <div class="relative mt-3">
+            <div x-ref="pickerMap" class="w-full h-56 rounded-xl overflow-hidden border border-gray-200"></div>
+            <div x-show="!mapReady" x-cloak class="absolute inset-0 w-full h-56 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-sm bg-gray-50">
+                Загрузка карты…
+            </div>
+        </div>
 
         <p class="text-xs text-gray-400 mt-2">
             Выберите адрес из подсказок или кликните по карте, чтобы уточнить точку — координаты подставятся автоматически.
+            Поля «Адрес», «Широта» и «Долгота» ниже по-прежнему можно отредактировать вручную.
         </p>
     </div>
 @else

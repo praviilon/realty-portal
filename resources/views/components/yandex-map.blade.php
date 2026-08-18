@@ -12,9 +12,10 @@
                 <button
                     type="button"
                     @click="toggleAreaSelection()"
+                    :disabled="!mapReady"
                     x-text="selectingArea ? 'Отменить выделение' : 'Выделить область на карте'"
                     :class="selectingArea ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-gray-600 border-gray-300'"
-                    class="px-3 py-1.5 rounded-lg border transition"
+                    class="px-3 py-1.5 rounded-lg border transition disabled:opacity-50 disabled:cursor-not-allowed"
                 ></button>
                 <button type="button" x-show="hasAreaSelection" x-cloak @click="clearAreaSelection()" class="text-gray-500 hover:text-red-600 underline">
                     Сбросить область
@@ -25,7 +26,21 @@
             </div>
         @endif
 
-        <div x-ref="mapCanvas" {{ $attributes->merge(['class' => 'w-full h-96 rounded-xl overflow-hidden border border-gray-200']) }}></div>
+        {{-- Пока грузится сторонний скрипт Yandex Maps, показываем явную
+             подсказку вместо пустого прямоугольника — без этого при
+             медленной сети было непонятно, карта сломана или просто ещё
+             не успела загрузиться. ВАЖНО: сам x-ref="mapCanvas" всегда
+             остаётся в DOM видимым (без x-show/display:none) — YMap()
+             вычисляет размеры контейнера в момент создания, и если бы этот
+             элемент был скрыт через display:none, карта могла бы
+             инициализироваться с нулевыми размерами. Поэтому подсказка о
+             загрузке рисуется отдельным слоем ПОВЕРХ карты, а не вместо неё. --}}
+        <div class="relative">
+            <div x-ref="mapCanvas" {{ $attributes->merge(['class' => 'w-full h-96 rounded-xl overflow-hidden border border-gray-200']) }}></div>
+            <div x-show="!mapReady" x-cloak class="absolute inset-0 w-full h-96 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-sm bg-gray-50">
+                Загрузка карты…
+            </div>
+        </div>
     </div>
 @else
     <div {{ $attributes->merge(['class' => 'w-full h-96 rounded-xl border border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-sm text-center p-6']) }}>

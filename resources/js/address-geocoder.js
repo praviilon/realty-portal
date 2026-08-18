@@ -29,6 +29,7 @@ function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
         suggestions: [],
         showSuggestions: false,
         map: null,
+        mapReady: false,
         marker: null,
 
         initMap() {
@@ -68,12 +69,16 @@ function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
                 this.placeMarker(this.lat, this.lng);
             }
 
-            if (YMapListener) {
+            if (!YMapListener) {
+                console.error('YMapListener недоступен в window.ymaps3 — уточнение адреса кликом по карте не будет работать.');
+            } else {
                 this.map.addChild(new YMapListener({
                     layer: 'any',
                     onClick: (_object, event) => this.handleMapClick(event),
                 }));
             }
+
+            this.mapReady = true;
         },
 
         handleMapClick(event) {
@@ -89,6 +94,23 @@ function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
         },
 
         placeMarker(lat, lng) {
+            // ИСПРАВЛЕНО (доработка "не обновляется карта/широта/долгота при
+            // выборе адреса"): карта грузится асинхронно (сторонний скрипт
+            // Yandex Maps через сеть), и это может занять больше времени, чем
+            // пользователю — набрать адрес и кликнуть по подсказке. Если
+            // select()/setPosition() срабатывали раньше, чем renderMap()
+            // успевал создать this.map, здесь падало
+            // "Cannot read properties of null (reading 'addChild')", и это
+            // исключение обрывало setPosition() ДО того, как он успевал
+            // вызвать $wire.set('lat', ...)/$wire.set('lng', ...) — снаружи
+            // выглядело так, будто широта и долгота вообще не обновляются.
+            // Теперь при отсутствующей карте просто ничего не рисуем: как
+            // только renderMap() всё же завершится, он сам расставит маркер
+            // по актуальным this.lat/this.lng (см. renderMap ниже).
+            if (!this.map) {
+                return;
+            }
+
             const {YMapMarker} = window.ymaps3;
 
             if (this.marker) {
@@ -106,10 +128,15 @@ function addressGeocoder(initialAddress, initialLat, initialLng, apiKey) {
         setPosition(lat, lng) {
             this.lat = lat;
             this.lng = lng;
-            this.placeMarker(lat, lng);
 
+            // Синхронизируем с Livewire-компонентом ПЕРВЫМ делом, до попытки
+            // отрисовать маркер — карта может быть ещё не готова (см.
+            // комментарий в placeMarker выше), а поля широты/долготы должны
+            // обновляться в любом случае, независимо от состояния карты.
             this.$wire.set('lat', lat);
             this.$wire.set('lng', lng);
+
+            this.placeMarker(lat, lng);
         },
 
         async search() {
