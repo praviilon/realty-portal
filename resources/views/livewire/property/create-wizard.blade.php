@@ -49,7 +49,15 @@
                 <div class="space-y-4">
                     <div>
                         <x-input-label for="address" value="Адрес" />
-                        <x-text-input wire:model="address" id="address" type="text" class="mt-1 block w-full" placeholder="г. Москва, ул. Примерная, д. 1" />
+                        {{-- ИЗМЕНЕНО (по просьбе пользователя): поле заполняется
+                             автоматически по выбору адреса ниже (подсказки/карта),
+                             вручную не редактируется — иначе пользователь мог
+                             ввести произвольный текст без реальных координат и
+                             застрять на шаге, не сумев вручную подобрать
+                             широту/долготу. --}}
+                        <x-text-input wire:model="address" id="address" type="text" readonly
+                            class="mt-1 block w-full bg-gray-50 text-gray-500 cursor-not-allowed"
+                            placeholder="Заполнится автоматически по выбору адреса ниже" />
                         <x-input-error :messages="$errors->get('address')" class="mt-2" />
 
                         {{-- Эпик 20 (Веха 2): подсказки адреса + карта для уточнения точки --}}
@@ -58,17 +66,19 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <x-input-label for="lat" value="Широта" />
-                            <x-text-input wire:model="lat" id="lat" type="number" step="any" class="mt-1 block w-full" placeholder="55.751244" />
+                            <x-text-input wire:model="lat" id="lat" type="number" step="any" readonly
+                                class="mt-1 block w-full bg-gray-50 text-gray-500 cursor-not-allowed" placeholder="55.751244" />
                             <x-input-error :messages="$errors->get('lat')" class="mt-2" />
                         </div>
                         <div>
                             <x-input-label for="lng" value="Долгота" />
-                            <x-text-input wire:model="lng" id="lng" type="number" step="any" class="mt-1 block w-full" placeholder="37.618423" />
+                            <x-text-input wire:model="lng" id="lng" type="number" step="any" readonly
+                                class="mt-1 block w-full bg-gray-50 text-gray-500 cursor-not-allowed" placeholder="37.618423" />
                             <x-input-error :messages="$errors->get('lng')" class="mt-2" />
                         </div>
                     </div>
                     <p class="text-xs text-gray-400">
-                        Координаты можно ввести вручную либо выбрать адрес выше по подсказкам/карте.
+                        Адрес, широта и долгота заполняются автоматически — выберите адрес из подсказок или кликните точку на карте ниже.
                     </p>
                 </div>
             @endif

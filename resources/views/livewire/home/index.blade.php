@@ -5,22 +5,36 @@
             <h1 class="text-3xl sm:text-4xl font-bold text-white">Найдите недвижимость мечты</h1>
             <p class="mt-3 text-gray-300">Жильё, коммерция и рабочие пространства — продажа и аренда</p>
 
-            <div class="mt-8 inline-flex rounded-t-lg overflow-hidden text-sm">
-                <button type="button" wire:click="switchCategory('residential')"
-                        class="px-5 py-2.5 font-medium {{ $activeCategory === 'residential' ? 'bg-white text-gray-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }}">
-                    Жильё
-                </button>
-                <button type="button" wire:click="switchCategory('commercial')"
-                        class="px-5 py-2.5 font-medium {{ $activeCategory === 'commercial' ? 'bg-white text-gray-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }}">
-                    Коммерция
-                </button>
-                <button type="button" wire:click="switchCategory('workspace')"
-                        class="px-5 py-2.5 font-medium {{ $activeCategory === 'workspace' ? 'bg-white text-gray-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }}">
-                    Рабочие пространства
-                </button>
-            </div>
+            {{-- ИСПРАВЛЕНО (по просьбе пользователя): вкладки и белая область
+                 фильтров раньше были соседними элементами со своей
+                 собственной shrink-to-fit шириной каждый — при разной ширине
+                 контента (короткие подписи вкладок против более широкой формы
+                 с полями) они не совпадали по ширине, особенно на широких
+                 экранах. Оборачиваем оба блока в один inline-grid без
+                 явных grid-template-columns: единственная колонка авто-
+                 подстраивается под САМЫЙ широкий из двух элементов (стандартный
+                 CSS grid приём), и оба (justify-items: stretch по умолчанию)
+                 растягиваются на одинаковую итоговую ширину. Верхний правый
+                 угол формы больше не скруглён (rounded-tr-xl убран) — теперь
+                 верхний край формы целиком примыкает к вкладкам той же
+                 ширины, скруглённые углы там были не нужны. --}}
+            <div class="mt-8 inline-grid text-sm">
+                <div class="flex rounded-t-lg overflow-hidden">
+                    <button type="button" wire:click="switchCategory('residential')"
+                            class="flex-1 whitespace-nowrap px-5 py-2.5 font-medium {{ $activeCategory === 'residential' ? 'bg-white text-gray-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }}">
+                        Жильё
+                    </button>
+                    <button type="button" wire:click="switchCategory('commercial')"
+                            class="flex-1 whitespace-nowrap px-5 py-2.5 font-medium {{ $activeCategory === 'commercial' ? 'bg-white text-gray-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }}">
+                        Коммерция
+                    </button>
+                    <button type="button" wire:click="switchCategory('workspace')"
+                            class="flex-1 whitespace-nowrap px-5 py-2.5 font-medium {{ $activeCategory === 'workspace' ? 'bg-white text-gray-900' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }}">
+                        Рабочие пространства
+                    </button>
+                </div>
 
-            <form wire:submit="search" class="bg-white rounded-b-xl rounded-tr-xl shadow-lg p-4 flex flex-wrap gap-4 items-end justify-center">
+            <form wire:submit="search" class="bg-white rounded-b-xl shadow-lg p-4 flex flex-wrap gap-4 items-end justify-center">
                 @if ($activeCategory === 'residential')
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1 text-left">Сделка</label>
@@ -70,6 +84,7 @@
                     <x-primary-button type="submit">Найти</x-primary-button>
                 </div>
             </form>
+            </div>
         </div>
     </div>
 

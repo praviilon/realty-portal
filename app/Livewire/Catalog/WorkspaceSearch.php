@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Catalog;
 
+use App\Livewire\Catalog\Concerns\HasAreaSelection;
 use App\Models\Workspace;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Layout;
@@ -15,13 +16,18 @@ use Livewire\WithPagination;
  * Веха 2). Отличия от коммерческой недвижимости: цена лежит не в одной
  * связанной таблице 1:1, а в workspace_pricing — 1:M по периодам
  * (час/сутки/неделя/месяц), поэтому фильтр по цене ищет по выбранному периоду
- * через whereHas('pricing', ...). Карта на этой странице — не переключаемая
- * вкладка, а фиксированная колонка рядом со списком (см. раздел 4 плана,
- * "Каталог/карта (фиксированная колонка)").
+ * через whereHas('pricing', ...).
+ *
+ * ИЗМЕНЕНО (унификация каталогов по просьбе пользователя): раньше карта на
+ * этой странице была не переключаемой вкладкой, а фиксированной колонкой
+ * рядом со списком. Теперь — как в жилой/коммерческой недвижимости:
+ * переключатель Список/Карта (свойство $view) + выделение области на карте
+ * (см. App\Livewire\Catalog\Concerns\HasAreaSelection).
  */
 #[Layout('layouts.app')]
 class WorkspaceSearch extends Component
 {
+    use HasAreaSelection;
     use WithPagination;
 
     #[Url]
@@ -46,6 +52,9 @@ class WorkspaceSearch extends Component
     #[Url]
     public array $amenities = [];
 
+    #[Url]
+    public string $view = 'list'; // list | map
+
     public function updated($property): void
     {
         if (in_array($property, ['workspaceType', 'period', 'priceMin', 'priceMax', 'areaMin', 'areaMax']) || str_starts_with((string) $property, 'amenities')) {
@@ -62,7 +71,7 @@ class WorkspaceSearch extends Component
 
     protected function filteredQuery(): Builder
     {
-        return Workspace::query()
+        $query = Workspace::query()
             ->active()
             ->with('pricing')
             ->when($this->workspaceType, fn ($q) => $q->where('workspace_type', $this->workspaceType))
@@ -79,6 +88,12 @@ class WorkspaceSearch extends Component
                     $q->whereJsonContains('amenities', $amenity);
                 }
             });
+
+        if (count($this->areaPolygon) >= 3) {
+            $query = $this->applyAreaFilter($query);
+        }
+
+        return $query;
     }
 
     /**

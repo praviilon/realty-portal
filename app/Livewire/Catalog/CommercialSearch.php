@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Catalog;
 
+use App\Livewire\Catalog\Concerns\HasAreaSelection;
 use App\Models\CommercialProperty;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Layout;
@@ -19,6 +20,7 @@ use Livewire\WithPagination;
 #[Layout('layouts.app')]
 class CommercialSearch extends Component
 {
+    use HasAreaSelection;
     use WithPagination;
 
     #[Url]
@@ -60,7 +62,7 @@ class CommercialSearch extends Component
     {
         [$relation, $column] = $this->priceRelationAndColumn();
 
-        return CommercialProperty::query()
+        $query = CommercialProperty::query()
             ->active()
             ->with(['saleDetail', 'rentDetail'])
             ->where('deal_type', $this->dealType)
@@ -71,6 +73,12 @@ class CommercialSearch extends Component
                     ->when($this->priceMin, fn ($d) => $d->where($column, '>=', $this->priceMin))
                     ->when($this->priceMax, fn ($d) => $d->where($column, '<=', $this->priceMax))
             ));
+
+        if (count($this->areaPolygon) >= 3) {
+            $query = $this->applyAreaFilter($query);
+        }
+
+        return $query;
     }
 
     /**

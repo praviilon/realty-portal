@@ -59,54 +59,68 @@
             </div>
         </div>
 
-        <div class="text-sm text-gray-500 mb-4">
-            Найдено объявлений: {{ $listings->total() }}
+        <div class="flex items-center justify-between mb-4">
+            <div class="text-sm text-gray-500">
+                Найдено объявлений: {{ $listings->total() }}
+            </div>
+
+            {{-- ИЗМЕНЕНО (унификация каталогов): раньше карта была
+                 фиксированной колонкой сбоку без переключателя. Теперь —
+                 как в жилой/коммерческой недвижимости. --}}
+            <div class="inline-flex rounded-lg border border-gray-200 overflow-hidden text-sm">
+                <button type="button" wire:click="$set('view', 'list')"
+                        class="px-3 py-1.5 {{ $view === 'list' ? 'bg-gray-800 text-white' : 'bg-white text-gray-600' }}">
+                    Список
+                </button>
+                <button type="button" wire:click="$set('view', 'map')"
+                        class="px-3 py-1.5 {{ $view === 'map' ? 'bg-gray-800 text-white' : 'bg-white text-gray-600' }}">
+                    Карта
+                </button>
+            </div>
         </div>
 
-        <!-- Каталог/карта: фиксированная колонка (эпик 26) — карта всегда видна рядом
-             со списком, без переключателя список/карта, в отличие от жилой и
-             коммерческой недвижимости. -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6" wire:loading.class="opacity-50">
-                    @forelse ($listings as $listing)
-                        <div class="relative bg-white border rounded-xl p-4 hover:shadow-lg transition">
-                            <a href="{{ route('workspace.show', $listing) }}" wire:navigate class="absolute inset-0 z-0" aria-label="Открыть объявление"></a>
+        @if ($view === 'map')
+            <x-yandex-map :pins="$pins" :selectable="true" class="mb-6" />
 
-                            <div class="relative z-10 pointer-events-none flex gap-3">
-                                <x-listing-thumb :photo="$listing->mainPhoto" />
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-center justify-between pr-10">
-                                        <div class="font-semibold text-lg">
-                                            от {{ number_format($listing->display_price ?? 0, 0, '', ' ') }} ₽
-                                        </div>
-                                        <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $listing->workspace_type_label }}</span>
-                                    </div>
-                                    <div class="text-gray-600 text-sm mt-1">{{ $listing->address }}</div>
-                                    <div class="text-gray-500 text-sm">{{ $listing->area }} м²</div>
+            @if (count($areaPolygon) >= 3)
+                <p class="text-sm text-gray-500 -mt-4 mb-6">
+                    Показаны объявления в выделенной на карте области.
+                    <button type="button" wire:click="clearAreaSelection" class="text-primary-600 hover:underline">Сбросить область</button>
+                </p>
+            @endif
+        @endif
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" wire:loading.class="opacity-50">
+            @forelse ($listings as $listing)
+                <div class="relative bg-white border rounded-xl p-4 hover:shadow-lg transition">
+                    <a href="{{ route('workspace.show', $listing) }}" wire:navigate class="absolute inset-0 z-0" aria-label="Открыть объявление"></a>
+
+                    <div class="relative z-10 pointer-events-none flex gap-3">
+                        <x-listing-thumb :photo="$listing->mainPhoto" />
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between pr-10">
+                                <div class="font-semibold text-lg">
+                                    от {{ number_format($listing->display_price ?? 0, 0, '', ' ') }} ₽
                                 </div>
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $listing->workspace_type_label }}</span>
                             </div>
-
-                            <div class="absolute top-3 right-3 z-20 flex flex-col gap-2">
-                                <livewire:favorites.button :favoritable="$listing" :key="'fav-workspace-'.$listing->id" />
-                                <livewire:comparison.button :comparable="$listing" :key="'cmp-workspace-'.$listing->id" />
-                            </div>
+                            <div class="text-gray-600 text-sm mt-1">{{ $listing->address }}</div>
+                            <div class="text-gray-500 text-sm">{{ $listing->area }} м²</div>
                         </div>
-                    @empty
-                        <p class="text-gray-500 col-span-full">Ничего не найдено по заданным фильтрам.</p>
-                    @endforelse
-                </div>
+                    </div>
 
-                <div class="mt-6">
-                    {{ $listings->links() }}
+                    <div class="absolute top-3 right-3 z-20 flex flex-col gap-2">
+                        <livewire:favorites.button :favoritable="$listing" :key="'fav-workspace-'.$listing->id" />
+                        <livewire:comparison.button :comparable="$listing" :key="'cmp-workspace-'.$listing->id" />
+                    </div>
                 </div>
-            </div>
+            @empty
+                <p class="text-gray-500 col-span-full">Ничего не найдено по заданным фильтрам.</p>
+            @endforelse
+        </div>
 
-            <div class="lg:col-span-1">
-                <div class="sticky top-6">
-                    <x-yandex-map :pins="$pins" />
-                </div>
-            </div>
+        <div class="mt-6">
+            {{ $listings->links() }}
         </div>
     </div>
 </div>

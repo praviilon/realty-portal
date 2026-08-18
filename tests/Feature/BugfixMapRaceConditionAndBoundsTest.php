@@ -113,13 +113,12 @@ class BugfixMapRaceConditionAndBoundsTest extends TestCase
         $this->assertStringNotContainsString('x-show', $matches[0]);
     }
 
-    public function test_address_picker_shows_loading_placeholder_and_manual_edit_hint(): void
+    public function test_address_picker_shows_loading_placeholder(): void
     {
         $user = User::factory()->create();
 
         $content = Livewire::actingAs($user)->test(\App\Livewire\Property\CreateWizard::class)->set('step', 2)->html();
 
         $this->assertStringContainsString('Загрузка карты', $content);
-        $this->assertStringContainsString('можно отредактировать вручную', $content);
     }
 }

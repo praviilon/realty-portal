@@ -2,30 +2,47 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Catalog\WorkspaceSearch;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Models\WorkspacePricing;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class Epic26WorkspaceCatalogTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_catalog_shows_map_and_listing_cards_side_by_side(): void
+    /**
+     * ОБНОВЛЕНО (унификация каталогов по просьбе пользователя): раньше карта
+     * была фиксированной колонкой сбоку (класс "sticky top-6") без
+     * переключателя. Теперь — как в жилой/коммерческой недвижимости: список
+     * показывается по умолчанию, переключатель "Список"/"Карта" управляет
+     * свойством $view, карта рендерится только при view === 'map'.
+     */
+    public function test_catalog_shows_listing_cards_and_view_toggle(): void
     {
         $listing = Workspace::factory()->create(['status' => 'active', 'address' => 'ул. Коворкинг, 3']);
         WorkspacePricing::factory()->create(['workspace_id' => $listing->id, 'period' => 'day', 'price' => 3000]);
 
         $response = $this->get(route('workspace.search'));
 
-        // Фиксированная колонка карты — не переключатель список/карта (как у жилой и
-        // коммерческой), карта и список видны одновременно на одной странице (без
-        // API-ключа рендерится заглушка компонента x-yandex-map, но сам компонент
-        // всегда присутствует на странице).
         $response->assertOk()
             ->assertSee($listing->address)
-            ->assertSee('sticky top-6', false);
+            ->assertSee('Список')
+            ->assertSee('Карта')
+            ->assertDontSee('sticky top-6', false);
+    }
+
+    public function test_catalog_map_view_renders_selectable_map_with_area_selection_ui(): void
+    {
+        Config::set('services.yandex_maps.api_key', 'test-fake-key');
+
+        Livewire::test(WorkspaceSearch::class)
+            ->set('view', 'map')
+            ->assertSee('Выделить область на карте', false);
     }
 
     public function test_listing_card_links_to_show_page(): void
