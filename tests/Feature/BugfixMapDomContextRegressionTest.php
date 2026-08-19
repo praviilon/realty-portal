@@ -76,13 +76,31 @@ class BugfixMapDomContextRegressionTest extends TestCase
         $this->assertStringContainsString('document.contains(this._el)', $js);
     }
 
-    public function test_pins_updated_handler_wraps_map_calls_in_try_catch(): void
+    /**
+     * ДОРАБОТАНО (доработка по просьбе пользователя: "при смене фильтров в
+     * режиме карты на ней остаются пины старых объявлений"): renderMarkers()
+     * и map.setLocation() раньше были в ОДНОМ try/catch, вызывались одно за
+     * другим — если setLocation() падал (см. класс-докблок выше про
+     * DomContext/вырожденные bounds), renderMarkers() до второй строки
+     * просто не доходил, и метки на карте молча оставались от предыдущего
+     * набора результатов поиска. Теперь это два НЕЗАВИСИМЫХ try/catch —
+     * сбой в подгонке области видимости не должен блокировать обновление
+     * самих меток.
+     */
+    public function test_pins_updated_handler_wraps_render_markers_and_set_location_in_separate_try_catch(): void
     {
         $js = file_get_contents(resource_path('js/yandex-map.js'));
 
         $this->assertMatchesRegularExpression(
-            '/_pinsUpdatedHandler = \(event\) => \{.*?try \{\s*this\.map\.setLocation\(this\.computeLocation\(\)\);\s*this\.renderMarkers\(\);\s*\} catch \(error\)/s',
-            $js
+            '/_pinsUpdatedHandler = \(event\) => \{.*?try \{\s*this\.renderMarkers\(\);\s*\} catch \(error\)/s',
+            $js,
+            'renderMarkers() должен вызываться в своём отдельном try/catch внутри обработчика pins-updated'
+        );
+
+        $this->assertMatchesRegularExpression(
+            '/_pinsUpdatedHandler = \(event\) => \{.*?try \{\s*this\.map\.setLocation\(this\.computeLocation\(\)\);\s*\} catch \(error\)/s',
+            $js,
+            'map.setLocation() должен вызываться в своём отдельном try/catch внутри обработчика pins-updated'
         );
     }
 

@@ -102,11 +102,30 @@ function yandexMap(initialPins, apiKey, selectable) {
                     return;
                 }
 
+                // ИСПРАВЛЕНО (доработка по просьбе пользователя: "при смене
+                // фильтров в режиме карты на ней остаются пины старых
+                // объявлений"): setLocation() и renderMarkers() раньше были
+                // в ОДНОМ try/catch, вызывались одно за другим. Если
+                // setLocation() падал (а это, судя по комментариям выше про
+                // DomContext/вырожденные bounds, у Yandex Maps API v3
+                // случается регулярно и не всегда предсказуемо) —
+                // renderMarkers() до второй строки просто не доходил, и
+                // метки на карте молча оставались от ПРЕДЫДУЩЕГО набора
+                // результатов поиска, хотя список карточек под картой уже
+                // обновился. Разносим их по отдельным try/catch: подгонка
+                // области видимости карты и сам набор меток — независимые
+                // друг от друга операции, сбой в одной не должен блокировать
+                // другую.
                 try {
-                    this.map.setLocation(this.computeLocation());
                     this.renderMarkers();
                 } catch (error) {
-                    console.error('Не удалось обновить карту по новым результатам поиска:', error);
+                    console.error('Не удалось обновить метки объявлений на карте:', error);
+                }
+
+                try {
+                    this.map.setLocation(this.computeLocation());
+                } catch (error) {
+                    console.error('Не удалось обновить область видимости карты по новым результатам поиска:', error);
                 }
             };
             window.addEventListener('catalog:pins-updated', this._pinsUpdatedHandler);
@@ -331,28 +350,44 @@ function yandexMap(initialPins, apiKey, selectable) {
         renderMarkers() {
             const {YMapMarker} = window.ymaps3;
 
-            this.markers.forEach((marker) => this.map.removeChild(marker));
+            // Каждое снятие/добавление метки — в своём try/catch: если
+            // Yandex Maps API споткнётся на одной конкретной метке, это не
+            // должно останавливать обновление всех остальных (см.
+            // подробный комментарий в _pinsUpdatedHandler выше о том, почему
+            // это разделение важно именно для симптома "остаются пины
+            // старых объявлений").
+            this.markers.forEach((marker) => {
+                try {
+                    this.map.removeChild(marker);
+                } catch (error) {
+                    console.error('Не удалось снять с карты метку прошлого набора результатов:', error);
+                }
+            });
             this.markers = [];
 
             this.pins.forEach((pin) => {
-                const markerEl = document.createElement('div');
-                markerEl.className = 'flex items-center justify-center px-2 py-1 rounded-full bg-primary-600 text-white text-xs font-semibold shadow cursor-pointer whitespace-nowrap';
-                markerEl.textContent = new Intl.NumberFormat('ru-RU').format(pin.price) + ' ₽';
-                markerEl.title = pin.address;
+                try {
+                    const markerEl = document.createElement('div');
+                    markerEl.className = 'flex items-center justify-center px-2 py-1 rounded-full bg-primary-600 text-white text-xs font-semibold shadow cursor-pointer whitespace-nowrap';
+                    markerEl.textContent = new Intl.NumberFormat('ru-RU').format(pin.price) + ' ₽';
+                    markerEl.title = pin.address;
 
-                if (pin.url) {
-                    markerEl.addEventListener('click', () => {
-                        window.location.href = pin.url;
-                    });
+                    if (pin.url) {
+                        markerEl.addEventListener('click', () => {
+                            window.location.href = pin.url;
+                        });
+                    }
+
+                    const marker = new YMapMarker(
+                        {coordinates: [Number(pin.lng), Number(pin.lat)]},
+                        markerEl
+                    );
+
+                    this.map.addChild(marker);
+                    this.markers.push(marker);
+                } catch (error) {
+                    console.error('Не удалось добавить на карту метку объявления:', error);
                 }
-
-                const marker = new YMapMarker(
-                    {coordinates: [Number(pin.lng), Number(pin.lat)]},
-                    markerEl
-                );
-
-                this.map.addChild(marker);
-                this.markers.push(marker);
             });
         },
 
