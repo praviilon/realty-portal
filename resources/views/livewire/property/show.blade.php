@@ -1,6 +1,6 @@
 <div>
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <a href="{{ route('residential.search') }}" wire:navigate class="text-sm text-gray-500 hover:text-gray-800">&laquo; Назад в каталог</a>
+        <a href="{{ route('residential.search') }}" wire:navigate class="text-sm text-gray-500 hover:text-gray-800">&laquo; Назад в каталог жилой недвижимости</a>
 
         <div class="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-6">

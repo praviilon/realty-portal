@@ -107,6 +107,20 @@ class Epic3CatalogTest extends TestCase
             ->assertSee('ул. Тестовая, 1');
     }
 
+    /**
+     * По просьбе пользователя: текст ссылки "Назад в каталог" на странице
+     * жилого объекта был единственным без уточнения типа недвижимости —
+     * у коммерческой и рабочих пространств уточнение уже было ("Назад в
+     * каталог коммерческой недвижимости" / "...рабочих пространств").
+     */
+    public function test_show_page_back_link_mentions_residential_catalog(): void
+    {
+        $listing = ResidentialProperty::factory()->create(['status' => 'active']);
+
+        $this->get(route('residential.show', $listing))
+            ->assertSee('Назад в каталог жилой недвижимости');
+    }
+
     public function test_show_page_404s_for_moderation_listing_to_guest(): void
     {
         $listing = ResidentialProperty::factory()->moderation()->create();
