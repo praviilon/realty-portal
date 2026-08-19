@@ -61,11 +61,23 @@ class CreateWizard extends Component
     /** @var string[] */
     public array $floorFeatures = [];
 
-    public ?int $price = null;
-
     public string $description = '';
 
-    // Шаг 4
+    // Шаг 4 — цена и условия (набор полей зависит от dealType, по аналогии
+    // с App\Livewire\CommercialProperty\CreateWizard)
+    public ?int $price = null;
+
+    public ?int $pricePerMonth = null;
+
+    public ?int $deposit = null;
+
+    public ?int $commission = null;
+
+    public bool $utilitiesIncluded = false;
+
+    public string $rentType = 'direct';
+
+    // Шаг 5
     /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile[] */
     public array $newPhotos = [];
 
@@ -95,8 +107,18 @@ class CreateWizard extends Component
                 $residentialProperty->floor_features ?? [],
                 array_keys(ResidentialProperty::floorFeatureLabels())
             ));
-            $this->price = $residentialProperty->price;
             $this->description = $residentialProperty->description;
+
+            if ($residentialProperty->deal_type === 'rent') {
+                $this->pricePerMonth = $residentialProperty->price;
+                $this->deposit = $residentialProperty->deposit;
+                $this->commission = $residentialProperty->commission;
+                $this->utilitiesIncluded = (bool) $residentialProperty->utilities_included;
+                $this->rentType = $residentialProperty->rent_type ?? 'direct';
+            } else {
+                $this->price = $residentialProperty->price;
+                $this->commission = $residentialProperty->commission;
+            }
         }
     }
 
@@ -123,10 +145,19 @@ class CreateWizard extends Component
                 'furniture' => ['nullable', 'in:none,partial,full'],
                 'floorFeatures' => ['array'],
                 'floorFeatures.*' => ['string', 'in:no_elevator'],
-                'price' => ['required', 'integer', 'min:1'],
                 'description' => ['required', 'string', 'min:10', 'max:5000'],
             ],
-            4 => [
+            4 => $this->dealType === 'rent' ? [
+                'pricePerMonth' => ['required', 'integer', 'min:1'],
+                'deposit' => ['nullable', 'integer', 'min:0'],
+                'commission' => ['nullable', 'integer', 'min:0'],
+                'utilitiesIncluded' => ['boolean'],
+                'rentType' => ['required', 'in:direct,sublease'],
+            ] : [
+                'price' => ['required', 'integer', 'min:1'],
+                'commission' => ['nullable', 'integer', 'min:0'],
+            ],
+            5 => [
                 'newPhotos.*' => ['nullable', 'image', 'max:5120'],
             ],
             default => [],
@@ -137,7 +168,7 @@ class CreateWizard extends Component
     {
         $this->validate($this->rulesForStep($this->step));
 
-        $this->step = min($this->step + 1, 4);
+        $this->step = min($this->step + 1, 5);
     }
 
     public function previousStep(): void
@@ -165,6 +196,7 @@ class CreateWizard extends Component
             ...$this->rulesForStep(2),
             ...$this->rulesForStep(3),
             ...$this->rulesForStep(4),
+            ...$this->rulesForStep(5),
         ]);
 
         $attributes = [
@@ -183,12 +215,31 @@ class CreateWizard extends Component
             'finishing_type' => $this->finishingType,
             'furniture' => $this->furniture,
             'floor_features' => $this->floorFeatures,
-            'price' => $this->price,
             'description' => $this->description,
             // Любое создание/редактирование уходит на повторную модерацию.
             'status' => 'moderation',
             'rejection_reason' => null,
         ];
+
+        // Шаг 4 ("Цена") — набор полей зависит от dealType, по аналогии с
+        // App\Livewire\CommercialProperty\CreateWizard::submit(). В отличие
+        // от коммерческой недвижимости цена продажи/аренды в месяц хранится
+        // в одной и той же колонке price (см. комментарий в миграции
+        // 2026_08_19_000003_..._price_details_..._table) — на неё уже
+        // завязаны каталог, сравнение, избранное и кабинет.
+        if ($this->dealType === 'rent') {
+            $attributes['price'] = $this->pricePerMonth;
+            $attributes['deposit'] = $this->deposit;
+            $attributes['commission'] = $this->commission;
+            $attributes['rent_type'] = $this->rentType;
+            $attributes['utilities_included'] = $this->utilitiesIncluded;
+        } else {
+            $attributes['price'] = $this->price;
+            $attributes['deposit'] = null;
+            $attributes['commission'] = $this->commission;
+            $attributes['rent_type'] = null;
+            $attributes['utilities_included'] = false;
+        }
 
         if ($this->editing) {
             $this->editing->update($attributes);
@@ -227,6 +278,7 @@ class CreateWizard extends Component
             'finishingTypeLabels' => ResidentialProperty::finishingTypeLabels(),
             'furnitureLabels' => ResidentialProperty::furnitureLabels(),
             'floorFeatureLabels' => ResidentialProperty::floorFeatureLabels(),
+            'rentTypeLabels' => ResidentialProperty::rentTypeLabels(),
         ]);
     }
 }

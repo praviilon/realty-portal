@@ -30,6 +30,10 @@ class ResidentialProperty extends Model
         'furniture',
         'floor_features',
         'price',
+        'deposit',
+        'commission',
+        'rent_type',
+        'utilities_included',
         'description',
         'status',
         'rejection_reason',
@@ -40,6 +44,7 @@ class ResidentialProperty extends Model
         'lat' => 'decimal:7',
         'lng' => 'decimal:7',
         'floor_features' => 'array',
+        'utilities_included' => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -117,6 +122,11 @@ class ResidentialProperty extends Model
     public static function furnitureLabels(): array
     {
         return CommercialProperty::furnitureLabels();
+    }
+
+    public static function rentTypeLabels(): array
+    {
+        return CommercialProperty::rentTypeLabels();
     }
 
     /**

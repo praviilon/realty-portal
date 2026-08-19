@@ -22,7 +22,9 @@
                 <div class="bg-white rounded-xl shadow p-6">
                     <div class="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                            <div class="text-2xl font-bold">{{ number_format($listing->price, 0, '', ' ') }} ₽</div>
+                            <div class="text-2xl font-bold">
+                                {{ number_format($listing->price, 0, '', ' ') }} ₽{{ $listing->deal_type === 'rent' ? '/мес.' : '' }}
+                            </div>
                             <div class="text-gray-600 mt-1">{{ $listing->address }}</div>
                         </div>
                         <div class="flex items-center gap-3">
@@ -95,6 +97,44 @@
                                         {{ $floorFeatureLabels[$feature] }}
                                     </span>
                                 @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Условия сделки — по аналогии с коммерческой недвижимостью
+                         (App\Livewire\CommercialProperty\Show). В отличие от неё
+                         цена/депозит/комиссия/тип аренды/коммунальные платежи
+                         хранятся не в отдельной связанной таблице, а прямо в
+                         residential_properties (см. миграцию
+                         2026_08_19_000003_..._price_details_..._table). --}}
+                    @if ($listing->deal_type === 'rent')
+                        <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm border-t pt-4">
+                            <div>
+                                <dt class="text-gray-500">Тип аренды</dt>
+                                <dd class="font-medium">{{ $rentTypeLabels[$listing->rent_type] ?? $listing->rent_type }}</dd>
+                            </div>
+                            @if ($listing->deposit)
+                                <div>
+                                    <dt class="text-gray-500">Депозит</dt>
+                                    <dd class="font-medium">{{ number_format($listing->deposit, 0, '', ' ') }} ₽</dd>
+                                </div>
+                            @endif
+                            @if ($listing->commission)
+                                <div>
+                                    <dt class="text-gray-500">Комиссия</dt>
+                                    <dd class="font-medium">{{ number_format($listing->commission, 0, '', ' ') }} ₽</dd>
+                                </div>
+                            @endif
+                            <div>
+                                <dt class="text-gray-500">Коммунальные платежи</dt>
+                                <dd class="font-medium">{{ $listing->utilities_included ? 'Включены' : 'Не включены' }}</dd>
+                            </div>
+                        </div>
+                    @elseif ($listing->deal_type === 'sale' && $listing->commission)
+                        <div class="mt-6 grid grid-cols-2 gap-4 text-sm border-t pt-4">
+                            <div>
+                                <dt class="text-gray-500">Комиссия</dt>
+                                <dd class="font-medium">{{ number_format($listing->commission, 0, '', ' ') }} ₽</dd>
                             </div>
                         </div>
                     @endif

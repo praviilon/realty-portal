@@ -37,10 +37,13 @@ class Epic7CreateWizardTest extends TestCase
             ->set('area', 45)
             ->set('floor', 3)
             ->set('totalFloors', 9)
-            ->set('price', 6500000)
             ->set('description', 'Отличная квартира рядом с метро.')
             ->call('nextStep')
             ->assertSet('step', 4)
+            ->set('price', 6500000)
+            ->set('commission', 50000)
+            ->call('nextStep')
+            ->assertSet('step', 5)
             ->call('submit')
             ->assertRedirect(route('dashboard'));
 
@@ -48,8 +51,101 @@ class Epic7CreateWizardTest extends TestCase
             'user_id' => $user->id,
             'address' => 'г. Москва, ул. Тестовая, д. 5',
             'price' => 6500000,
+            'commission' => 50000,
+            'deposit' => null,
+            'rent_type' => null,
+            'utilities_included' => false,
             'status' => 'moderation',
         ]);
+    }
+
+    /**
+     * Доработка по просьбе пользователя: шаг 4 ("Цена") вынесен из шага 3 в
+     * отдельный шаг по аналогии с коммерческой недвижимостью — для аренды
+     * нужны цена в месяц/депозит/комиссия/тип аренды/"коммунальные платежи
+     * включены".
+     */
+    public function test_user_can_create_rent_listing_with_rent_specific_price_fields(): void
+    {
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Property\CreateWizard::class)
+            ->set('dealType', 'rent')
+            ->set('propertyType', 'apartment')
+            ->call('nextStep')
+            ->set('address', 'г. Москва, ул. Тестовая, д. 5')
+            ->set('lat', 55.751244)
+            ->set('lng', 37.618423)
+            ->call('nextStep')
+            ->set('area', 45)
+            ->set('floor', 3)
+            ->set('totalFloors', 9)
+            ->set('description', 'Отличная квартира рядом с метро.')
+            ->call('nextStep')
+            ->assertSet('step', 4)
+            ->set('pricePerMonth', 80000)
+            ->set('deposit', 80000)
+            ->set('commission', 40000)
+            ->set('rentType', 'sublease')
+            ->set('utilitiesIncluded', true)
+            ->call('nextStep')
+            ->assertSet('step', 5)
+            ->call('submit')
+            ->assertRedirect(route('dashboard'));
+
+        $listing = ResidentialProperty::first();
+        $this->assertNotNull($listing);
+        $this->assertSame('rent', $listing->deal_type);
+        $this->assertSame(80000, $listing->price);
+        $this->assertSame(80000, $listing->deposit);
+        $this->assertSame(40000, $listing->commission);
+        $this->assertSame('sublease', $listing->rent_type);
+        $this->assertTrue($listing->utilities_included);
+    }
+
+    public function test_step4_requires_price_per_month_for_rent(): void
+    {
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Property\CreateWizard::class)
+            ->set('dealType', 'rent')
+            ->call('nextStep')
+            ->set('address', 'г. Москва, ул. Тестовая, д. 5')
+            ->set('lat', 55.7)
+            ->set('lng', 37.6)
+            ->call('nextStep')
+            ->set('area', 50)
+            ->set('floor', 1)
+            ->set('totalFloors', 5)
+            ->set('description', 'Тестовое описание квартиры.')
+            ->call('nextStep')
+            ->call('nextStep')
+            ->assertHasErrors(['pricePerMonth'])
+            ->assertSet('step', 4);
+    }
+
+    public function test_step4_requires_price_for_sale(): void
+    {
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Property\CreateWizard::class)
+            ->set('dealType', 'sale')
+            ->call('nextStep')
+            ->set('address', 'г. Москва, ул. Тестовая, д. 5')
+            ->set('lat', 55.7)
+            ->set('lng', 37.6)
+            ->call('nextStep')
+            ->set('area', 50)
+            ->set('floor', 1)
+            ->set('totalFloors', 5)
+            ->set('description', 'Тестовое описание квартиры.')
+            ->call('nextStep')
+            ->call('nextStep')
+            ->assertHasErrors(['price'])
+            ->assertSet('step', 4);
     }
 
     /**
@@ -82,10 +178,12 @@ class Epic7CreateWizardTest extends TestCase
             ->set('finishingType', 'rough')
             ->set('furniture', 'partial')
             ->set('floorFeatures', ['no_elevator'])
-            ->set('price', 6500000)
             ->set('description', 'Отличная квартира рядом с метро.')
             ->call('nextStep')
             ->assertSet('step', 4)
+            ->set('price', 6500000)
+            ->call('nextStep')
+            ->assertSet('step', 5)
             ->call('submit')
             ->assertRedirect(route('dashboard'));
 
@@ -129,7 +227,6 @@ class Epic7CreateWizardTest extends TestCase
             ->set('floor', 3)
             ->set('totalFloors', 9)
             ->set('floorFeatures', ['has_pool'])
-            ->set('price', 6500000)
             ->set('description', 'Отличная квартира рядом с метро.')
             ->call('nextStep')
             ->assertHasErrors(['floorFeatures.0'])
@@ -190,7 +287,7 @@ class Epic7CreateWizardTest extends TestCase
 
         Livewire::actingAs($user)
             ->test(\App\Livewire\Property\CreateWizard::class)
-            ->call('goToStep', 4)
+            ->call('goToStep', 5)
             ->assertSet('step', 1);
     }
 
@@ -212,8 +309,9 @@ class Epic7CreateWizardTest extends TestCase
             ->set('area', 45)
             ->set('floor', 3)
             ->set('totalFloors', 9)
-            ->set('price', 6500000)
             ->set('description', 'Отличная квартира рядом с метро.')
+            ->call('nextStep')
+            ->set('price', 6500000)
             ->call('nextStep')
             ->set('newPhotos', [$photo])
             ->call('submit');
@@ -231,13 +329,16 @@ class Epic7CreateWizardTest extends TestCase
         $listing = ResidentialProperty::factory()->create([
             'user_id' => $user->id,
             'status' => 'active',
+            'deal_type' => 'sale',
             'price' => 1000000,
         ]);
 
         Livewire::actingAs($user)
             ->test(\App\Livewire\Property\CreateWizard::class, ['residentialProperty' => $listing])
             ->assertSet('address', $listing->address)
+            ->assertSet('price', 1000000)
             ->set('price', 2000000)
+            ->call('nextStep')
             ->call('nextStep')
             ->call('nextStep')
             ->call('nextStep')
@@ -246,6 +347,48 @@ class Epic7CreateWizardTest extends TestCase
         $listing->refresh();
         $this->assertSame(2000000, $listing->price);
         $this->assertSame('moderation', $listing->status);
+    }
+
+    /**
+     * Доработка по просьбе пользователя: при смене типа сделки на шаге 1
+     * набор полей на шаге 4 меняется — при переключении с продажи на
+     * аренду поля продажи (price здесь общая колонка, но rent_type/deposit/
+     * utilities_included) должны корректно перезаписаться, по аналогии с
+     * App\Livewire\CommercialProperty\CreateWizard.
+     */
+    public function test_switching_deal_type_on_edit_updates_price_fields(): void
+    {
+        $user = User::factory()->create();
+        $listing = ResidentialProperty::factory()->create([
+            'user_id' => $user->id,
+            'deal_type' => 'sale',
+            'price' => 5000000,
+            'commission' => 100000,
+            'deposit' => null,
+            'rent_type' => null,
+            'utilities_included' => false,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Property\CreateWizard::class, ['residentialProperty' => $listing])
+            ->set('dealType', 'rent')
+            ->call('nextStep')
+            ->call('nextStep')
+            ->call('nextStep')
+            ->assertSet('step', 4)
+            ->set('pricePerMonth', 90000)
+            ->set('deposit', 90000)
+            ->set('rentType', 'direct')
+            ->set('utilitiesIncluded', true)
+            ->call('nextStep')
+            ->call('submit');
+
+        $listing->refresh();
+        $this->assertSame('rent', $listing->deal_type);
+        $this->assertSame(90000, $listing->price);
+        $this->assertSame(90000, $listing->deposit);
+        $this->assertSame('direct', $listing->rent_type);
+        $this->assertTrue($listing->utilities_included);
     }
 
     public function test_user_cannot_edit_someone_elses_listing(): void

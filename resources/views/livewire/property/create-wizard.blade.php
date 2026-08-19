@@ -3,12 +3,12 @@
         <h1 class="text-2xl font-bold text-gray-900 mb-2">
             {{ $editing ? 'Редактирование объявления' : 'Новое объявление' }}
         </h1>
-        <p class="text-gray-500 text-sm mb-6">Жилая недвижимость · шаг {{ $step }} из 4</p>
+        <p class="text-gray-500 text-sm mb-6">Жилая недвижимость · шаг {{ $step }} из 5</p>
 
         <!-- Индикатор шагов -->
         <ol class="flex items-center w-full mb-8 text-sm">
-            @foreach (['Основное', 'Адрес', 'Характеристики', 'Фотографии'] as $i => $label)
-                <li class="flex-1 flex items-center {{ $i + 1 < 4 ? 'after:content-[\'\'] after:flex-1 after:h-0.5 after:mx-2 ' . ($step > $i + 1 ? 'after:bg-primary-600' : 'after:bg-gray-200') : '' }}">
+            @foreach (['Основное', 'Адрес', 'Характеристики', 'Цена', 'Фотографии'] as $i => $label)
+                <li class="flex-1 flex items-center {{ $i + 1 < 5 ? 'after:content-[\'\'] after:flex-1 after:h-0.5 after:mx-2 ' . ($step > $i + 1 ? 'after:bg-primary-600' : 'after:bg-gray-200') : '' }}">
                     <button type="button" wire:click="goToStep({{ $i + 1 }})"
                             @disabled($step < $i + 1)
                             class="flex items-center justify-center w-8 h-8 rounded-full shrink-0 {{ $step >= $i + 1 ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-500' }}">
@@ -105,11 +105,6 @@
                             <x-input-error :messages="$errors->get('area')" class="mt-2" />
                         </div>
                         <div>
-                            <x-input-label for="price" value="Цена, ₽" />
-                            <x-text-input wire:model="price" id="price" type="number" class="mt-1 block w-full" />
-                            <x-input-error :messages="$errors->get('price')" class="mt-2" />
-                        </div>
-                        <div>
                             <x-input-label for="floor" value="Этаж" />
                             <x-text-input wire:model="floor" id="floor" type="number" class="mt-1 block w-full" />
                             <x-input-error :messages="$errors->get('floor')" class="mt-2" />
@@ -169,8 +164,56 @@
                 </div>
             @endif
 
-            <!-- Шаг 4: Фотографии -->
+            <!-- Шаг 4: Цена и условия (по аналогии с коммерческой недвижимостью) -->
             @if ($step === 4)
+                <div class="space-y-4">
+                    @if ($dealType === 'rent')
+                        <div>
+                            <x-input-label for="pricePerMonth" value="Цена в месяц, ₽" />
+                            <x-text-input wire:model="pricePerMonth" id="pricePerMonth" type="number" class="mt-1 block w-full" />
+                            <x-input-error :messages="$errors->get('pricePerMonth')" class="mt-2" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <x-input-label for="deposit" value="Депозит, ₽ (необязательно)" />
+                                <x-text-input wire:model="deposit" id="deposit" type="number" class="mt-1 block w-full" />
+                                <x-input-error :messages="$errors->get('deposit')" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-input-label for="commission" value="Комиссия, ₽ (необязательно)" />
+                                <x-text-input wire:model="commission" id="commission" type="number" class="mt-1 block w-full" />
+                                <x-input-error :messages="$errors->get('commission')" class="mt-2" />
+                            </div>
+                        </div>
+                        <div>
+                            <x-input-label for="rentType" value="Тип аренды" />
+                            <select wire:model="rentType" id="rentType" class="mt-1 rounded-lg border-gray-300 w-full">
+                                @foreach ($rentTypeLabels as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <label class="flex items-center gap-2 text-sm text-gray-700">
+                            <input type="checkbox" wire:model="utilitiesIncluded" class="rounded border-gray-300 text-primary-600">
+                            Коммунальные платежи включены в стоимость
+                        </label>
+                    @else
+                        <div>
+                            <x-input-label for="price" value="Цена, ₽" />
+                            <x-text-input wire:model="price" id="price" type="number" class="mt-1 block w-full" />
+                            <x-input-error :messages="$errors->get('price')" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="commission" value="Комиссия, ₽ (необязательно)" />
+                            <x-text-input wire:model="commission" id="commission" type="number" class="mt-1 block w-full" />
+                            <x-input-error :messages="$errors->get('commission')" class="mt-2" />
+                        </div>
+                    @endif
+                </div>
+            @endif
+
+            <!-- Шаг 5: Фотографии -->
+            @if ($step === 5)
                 <div class="space-y-4">
                     <div>
                         <x-input-label for="newPhotos" value="Фотографии (необязательно)" />
@@ -210,7 +253,7 @@
                     Назад
                 </x-secondary-button>
 
-                @if ($step < 4)
+                @if ($step < 5)
                     <x-primary-button type="button" wire:click="nextStep">
                         Далее
                     </x-primary-button>

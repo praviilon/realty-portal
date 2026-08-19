@@ -16,10 +16,11 @@ class ResidentialPropertyFactory extends Factory
     public function definition(): array
     {
         $totalFloors = fake()->numberBetween(5, 25);
+        $dealType = fake()->randomElement(['sale', 'rent']);
 
         return [
             'user_id' => User::factory(),
-            'deal_type' => fake()->randomElement(['sale', 'rent']),
+            'deal_type' => $dealType,
             'property_type' => fake()->randomElement(['apartment', 'house', 'room', 'studio']),
             'address' => fake()->address(),
             'lat' => fake()->latitude(55.5, 56.0),
@@ -34,6 +35,10 @@ class ResidentialPropertyFactory extends Factory
             'furniture' => fake()->randomElement(['none', 'partial', 'full']),
             'floor_features' => fake()->randomElement([[], ['no_elevator']]),
             'price' => fake()->numberBetween(15000, 25000000),
+            'deposit' => $dealType === 'rent' ? fake()->optional()->numberBetween(10000, 100000) : null,
+            'commission' => fake()->optional()->numberBetween(5000, 50000),
+            'rent_type' => $dealType === 'rent' ? fake()->randomElement(['direct', 'sublease']) : null,
+            'utilities_included' => $dealType === 'rent' ? fake()->boolean() : false,
             'description' => fake()->realText(200),
             'status' => 'active',
             'views_count' => fake()->numberBetween(0, 500),

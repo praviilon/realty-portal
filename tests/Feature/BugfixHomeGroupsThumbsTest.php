@@ -137,7 +137,9 @@ class BugfixHomeGroupsThumbsTest extends TestCase
         $user = User::factory()->create();
 
         $component = Livewire::actingAs($user)->test(ResidentialPropertyWizard::class);
-        $component->set('step', 4);
+        // Шаг 4 стал шагом "Цена" (по аналогии с коммерческой недвижимостью),
+        // фотографии переехали на шаг 5.
+        $component->set('step', 5);
 
         $component->assertSee('Нажмите, чтобы выбрать фотографии');
     }

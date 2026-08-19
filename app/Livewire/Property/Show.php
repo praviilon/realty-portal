@@ -70,6 +70,7 @@ class Show extends Component
             'finishingTypeLabels' => ResidentialProperty::finishingTypeLabels(),
             'furnitureLabels' => ResidentialProperty::furnitureLabels(),
             'floorFeatureLabels' => ResidentialProperty::floorFeatureLabels(),
+            'rentTypeLabels' => ResidentialProperty::rentTypeLabels(),
         ]);
     }
 }
