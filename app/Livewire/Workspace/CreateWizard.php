@@ -106,7 +106,17 @@ class CreateWizard extends Component
             $this->entranceType = $workspace->entrance_type ?? 'separate';
             $this->floor = $workspace->floor;
             $this->totalFloors = $workspace->total_floors;
-            $this->floorFeatures = $workspace->floor_features ?? [];
+            // array_intersect — на случай, если у редактируемого объявления
+            // ещё сохранено старое значение 'separate_entrance' (убрано из
+            // Workspace::floorFeatureLabels() по просьбе пользователя):
+            // иначе оно осталось бы выбранным в $this->floorFeatures без
+            // соответствующего чекбокса в форме и валидация на submit()
+            // упала бы, так как 'separate_entrance' больше не входит в
+            // список допустимых значений.
+            $this->floorFeatures = array_values(array_intersect(
+                $workspace->floor_features ?? [],
+                array_keys(Workspace::floorFeatureLabels())
+            ));
             $this->area = $workspace->area;
             $this->accessTime = $workspace->access_time ?: $this->accessTime;
             $this->amenities = $workspace->amenities ?? [];
@@ -147,7 +157,7 @@ class CreateWizard extends Component
                 'floor' => ['required', 'integer', 'min:1', 'max:200'],
                 'totalFloors' => ['required', 'integer', 'min:1', 'max:200', 'gte:floor'],
                 'floorFeatures' => ['array'],
-                'floorFeatures.*' => ['string', 'in:separate_entrance,parking,security,reception'],
+                'floorFeatures.*' => ['string', 'in:parking,security,reception'],
                 'area' => ['required', 'integer', 'min:1', 'max:100000'],
                 'accessTime' => ['required', 'array', 'min:1'],
                 'accessTime.*.type' => ['required', 'in:weekdays,weekends,daily,round_the_clock'],

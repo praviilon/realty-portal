@@ -265,6 +265,79 @@ class Epic23WorkspaceTest extends TestCase
             ->assertForbidden();
     }
 
+    /**
+     * Доработка по просьбе пользователя: "Отдельный вход с улицы" убран из
+     * "Особенностей помещения" на шаге 3 — дублирует характеристику "Вход"
+     * (entranceType). См. App\Models\Workspace::floorFeatureLabels().
+     */
+    public function test_step3_no_longer_offers_separate_entrance_checkbox(): void
+    {
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(CreateWizard::class)
+            ->call('nextStep')
+            ->set('address', 'г. Москва, ул. Тестовая, д. 5')
+            ->set('lat', 55.7)
+            ->set('lng', 37.6)
+            ->call('nextStep')
+            ->assertSet('step', 3)
+            ->assertDontSee('Отдельный вход с улицы')
+            ->assertSee('Парковка')
+            ->assertSee('Охрана/видеонаблюдение')
+            ->assertSee('Ресепшн');
+    }
+
+    public function test_separate_entrance_is_rejected_as_a_floor_feature_value(): void
+    {
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(CreateWizard::class)
+            ->call('nextStep')
+            ->set('address', 'г. Москва, ул. Тестовая, д. 5')
+            ->set('lat', 55.7)
+            ->set('lng', 37.6)
+            ->call('nextStep')
+            ->set('area', 20)
+            ->set('floor', 1)
+            ->set('totalFloors', 5)
+            ->set('floorFeatures', ['separate_entrance'])
+            ->set('description', 'Тестовое описание рабочего пространства.')
+            ->call('nextStep')
+            ->assertHasErrors(['floorFeatures.0'])
+            ->assertSet('step', 3);
+    }
+
+    /**
+     * Ранее созданные объявления могут ещё хранить 'separate_entrance' в
+     * floor_features — при открытии на редактирование это значение должно
+     * молча вычищаться из формы, иначе повторное сохранение без изменения
+     * этого поля упало бы на валидации (значения больше нет в списке
+     * допустимых).
+     */
+    public function test_editing_listing_with_legacy_separate_entrance_feature_sanitizes_it_and_still_saves(): void
+    {
+        $user = User::factory()->create();
+        $listing = Workspace::factory()->create([
+            'user_id' => $user->id,
+            'floor_features' => ['separate_entrance', 'reception'],
+        ]);
+        \App\Models\WorkspacePricing::factory()->create(['workspace_id' => $listing->id, 'period' => 'hour', 'price' => 500]);
+
+        Livewire::actingAs($user)
+            ->test(CreateWizard::class, ['workspace' => $listing])
+            ->assertSet('floorFeatures', ['reception'])
+            ->call('nextStep')
+            ->call('nextStep')
+            ->call('nextStep')
+            ->call('submit')
+            ->assertRedirect(route('dashboard'));
+
+        $listing->refresh();
+        $this->assertSame(['reception'], $listing->floor_features);
+    }
+
     public function test_dashboard_shows_workspace_listing(): void
     {
         $user = User::factory()->create();

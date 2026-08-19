@@ -51,6 +51,12 @@
                             <dt class="text-gray-500">Площадь</dt>
                             <dd class="font-medium">{{ $listing->area }} м²</dd>
                         </div>
+                        @if ($listing->workspace_subtype_label)
+                            <div>
+                                <dt class="text-gray-500">Тип места</dt>
+                                <dd class="font-medium">{{ $listing->workspace_subtype_label }}</dd>
+                            </div>
+                        @endif
                         @if ($listing->building_type)
                             <div>
                                 <dt class="text-gray-500">Тип здания</dt>
@@ -67,6 +73,17 @@
                             <div>
                                 <dt class="text-gray-500">Вход</dt>
                                 <dd class="font-medium">{{ $entranceTypeLabels[$listing->entrance_type] ?? $listing->entrance_type }}</dd>
+                            </div>
+                        @endif
+                        @if ($listing->metro_station)
+                            <div>
+                                <dt class="text-gray-500">Метро</dt>
+                                <dd class="font-medium">
+                                    {{ $listing->metro_station }}
+                                    @if ($listing->metro_distance_min)
+                                        · {{ $listing->metro_distance_min }} мин пешком
+                                    @endif
+                                </dd>
                             </div>
                         @endif
                         @if ($listing->deposit)
@@ -95,6 +112,25 @@
                                         @if (($slot['type'] ?? null) !== 'round_the_clock' && !empty($slot['time_from']))
                                             {{ $slot['time_from'] }}&ndash;{{ $slot['time_to'] }}
                                         @endif
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Особенности помещения (floor_features) — array_intersect отсекает
+                         значения, которых больше нет в Workspace::floorFeatureLabels()
+                         (в частности, старое 'separate_entrance' у ранее созданных
+                         объявлений — эта особенность убрана по просьбе пользователя,
+                         так как дублирует характеристику "Вход" выше). --}}
+                    @php($visibleFloorFeatures = array_intersect($listing->floor_features ?? [], array_keys($floorFeatureLabels)))
+                    @if (!empty($visibleFloorFeatures))
+                        <div class="mt-4">
+                            <h3 class="text-sm font-medium text-gray-500 mb-2">Особенности помещения</h3>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ($visibleFloorFeatures as $feature)
+                                    <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                                        {{ $floorFeatureLabels[$feature] }}
                                     </span>
                                 @endforeach
                             </div>
@@ -146,6 +182,9 @@
                     <h2 class="text-lg font-semibold mb-4">{{ $listing->owner_type === 'agent' ? 'Агент' : 'Владелец' }}</h2>
                     <div class="font-medium">{{ $listing->user->full_name }}</div>
                     <div class="text-sm text-gray-500">На сайте с {{ $listing->user->created_at->format('m.Y') }}</div>
+                    <div class="mt-2 text-xs inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                        {{ $listing->contact_type_label }}
+                    </div>
 
                     @auth
                         @if (auth()->id() !== $listing->user_id)

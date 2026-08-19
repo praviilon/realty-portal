@@ -136,10 +136,19 @@ class Workspace extends Model
         return CommercialProperty::entranceTypeLabels();
     }
 
+    /**
+     * ИЗМЕНЕНО (по просьбе пользователя): "Отдельный вход с улицы" убран из
+     * списка — эта информация дублирует характеристику "Вход" (entranceType,
+     * значения "Отдельный"/"Общий"), которая уже есть на шаге 3 мастера
+     * создания объявления и отображается на карточке объявления. Старые
+     * объявления, у которых 'separate_entrance' всё ещё сохранён в
+     * floor_features, просто перестают показывать эту особенность (значение
+     * не находится в этом списке — см. App\Livewire\Workspace\CreateWizard,
+     * где значение дополнительно вычищается из формы при редактировании).
+     */
     public static function floorFeatureLabels(): array
     {
         return [
-            'separate_entrance' => 'Отдельный вход с улицы',
             'parking' => 'Парковка',
             'security' => 'Охрана/видеонаблюдение',
             'reception' => 'Ресепшн',
@@ -210,6 +219,20 @@ class Workspace extends Model
     public function getWorkspaceTypeLabelAttribute(): string
     {
         return self::workspaceTypeLabels()[$this->workspace_type] ?? $this->workspace_type;
+    }
+
+    /**
+     * "Тип места" (закреплённое место / hot desk) — актуален только для
+     * workspace_type === 'workspace', для остальных типов workspace_subtype
+     * не заполняется (см. App\Livewire\Workspace\CreateWizard::submit()).
+     */
+    public function getWorkspaceSubtypeLabelAttribute(): ?string
+    {
+        if (! $this->workspace_subtype) {
+            return null;
+        }
+
+        return self::workspaceSubtypeLabels()[$this->workspace_subtype] ?? $this->workspace_subtype;
     }
 
     public function getBuildingTypeLabelAttribute(): string

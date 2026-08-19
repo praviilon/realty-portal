@@ -25,7 +25,7 @@ class WorkspaceFactory extends Factory
             'entrance_type' => fake()->randomElement(['separate', 'common']),
             'floor' => fake()->numberBetween(1, $totalFloors),
             'total_floors' => $totalFloors,
-            'floor_features' => fake()->randomElements(['separate_entrance', 'parking', 'security', 'reception'], 2),
+            'floor_features' => fake()->randomElements(['parking', 'security', 'reception'], 2),
             'area' => fake()->numberBetween(5, 500),
             'access_time' => [['type' => 'weekdays', 'time_from' => '09:00', 'time_to' => '20:00']],
             'amenities' => fake()->randomElements(['wifi', 'coffee', 'kitchen', 'printer', 'whiteboard'], 3),
