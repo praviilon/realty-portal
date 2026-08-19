@@ -114,19 +114,13 @@ class Epic3CatalogTest extends TestCase
         $this->get(route('residential.show', $listing))->assertStatus(404);
     }
 
-    /**
-     * По просьбе пользователя (баг): прямая ссылка на неактивное объявление
-     * не должна работать даже для его автора — раньше владелец мог
-     * просматривать своё объявление на модерации/отклонённое/архивное
-     * напрямую по URL, теперь это тоже 404.
-     */
-    public function test_show_page_404s_for_owner_too_if_not_active(): void
+    public function test_show_page_visible_to_owner_even_if_not_active(): void
     {
         $owner = User::factory()->create();
         $listing = ResidentialProperty::factory()->moderation()->create(['user_id' => $owner->id]);
 
         $this->actingAs($owner)
             ->get(route('residential.show', $listing))
-            ->assertStatus(404);
+            ->assertStatus(200);
     }
 }

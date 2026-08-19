@@ -77,13 +77,7 @@ class Epic16CommercialCatalogTest extends TestCase
         $this->assertSame(1, $listing->fresh()->views_count);
     }
 
-    /**
-     * По просьбе пользователя (баг): прямая ссылка на неактивное объявление
-     * не должна работать даже для его автора — раньше владелец мог
-     * просматривать своё объявление на модерации/отклонённое/архивное
-     * напрямую по URL, теперь это тоже 404.
-     */
-    public function test_moderation_listing_hidden_from_strangers_and_owner(): void
+    public function test_moderation_listing_hidden_from_strangers_but_visible_to_owner(): void
     {
         $owner = User::factory()->create();
         $listing = CommercialProperty::factory()->moderation()->create(['user_id' => $owner->id, 'deal_type' => 'sale']);
@@ -92,7 +86,7 @@ class Epic16CommercialCatalogTest extends TestCase
         $stranger = User::factory()->create();
 
         $this->actingAs($stranger)->get(route('commercial.show', $listing))->assertNotFound();
-        $this->actingAs($owner)->get(route('commercial.show', $listing))->assertNotFound();
+        $this->actingAs($owner)->get(route('commercial.show', $listing))->assertOk();
     }
 
     public function test_map_is_rendered_on_show_page(): void

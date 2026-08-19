@@ -22,10 +22,11 @@ class Show extends Component
         $this->listing = $residentialProperty->load(['user', 'photos' => fn ($q) => $q->orderBy('sort_order')]);
 
         // Публично видны только активные объявления — модерация/отклонённые/архив скрыты
-        // по прямой ссылке даже от автора объявления (раньше владелец мог
-        // просматривать своё неактивное объявление напрямую — это было
-        // сообщено как баг и намеренно убрано).
-        abort_unless($this->listing->status === 'active', 404);
+        // от посторонних, кроме автора объявления.
+        abort_unless(
+            $this->listing->status === 'active' || auth()->id() === $this->listing->user_id,
+            404
+        );
 
         $this->registerView();
     }
