@@ -132,4 +132,45 @@ class Epic7DashboardListingsTest extends TestCase
             ->get('/dashboard')
             ->assertDontSee('property-photos/stranger-thumb-test.webp', false);
     }
+
+    // ---------- Кликабельные строчки объявлений в ЛК ----------
+
+    /**
+     * По просьбе пользователя: строчки объявлений в трёх списках личного
+     * кабинета должны быть кликабельными и вести на страницу объекта — в
+     * том числе для неактивных объявлений (модерация/архив/отклонённые),
+     * которые автор и так может открыть напрямую по ссылке
+     * (App\Livewire\{Property,CommercialProperty,Workspace}\Show::mount()).
+     */
+    public function test_dashboard_residential_row_links_to_its_show_page(): void
+    {
+        $user = User::factory()->create();
+        $listing = ResidentialProperty::factory()->moderation()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user)
+            ->get('/dashboard')
+            ->assertSee(route('residential.show', $listing), false);
+    }
+
+    public function test_dashboard_commercial_row_links_to_its_show_page(): void
+    {
+        $user = User::factory()->create();
+        $listing = CommercialProperty::factory()->create(['user_id' => $user->id, 'status' => 'archived', 'deal_type' => 'sale']);
+        CommercialSaleDetail::factory()->create(['property_id' => $listing->id]);
+
+        $this->actingAs($user)
+            ->get('/dashboard')
+            ->assertSee(route('commercial.show', $listing), false);
+    }
+
+    public function test_dashboard_workspace_row_links_to_its_show_page(): void
+    {
+        $user = User::factory()->create();
+        $listing = Workspace::factory()->create(['user_id' => $user->id, 'status' => 'rejected']);
+        WorkspacePricing::factory()->create(['workspace_id' => $listing->id, 'period' => 'day', 'price' => 2000]);
+
+        $this->actingAs($user)
+            ->get('/dashboard')
+            ->assertSee(route('workspace.show', $listing), false);
+    }
 }

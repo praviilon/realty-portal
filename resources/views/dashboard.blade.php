@@ -29,7 +29,7 @@
                     <div class="divide-y">
                         @foreach ($listings as $listing)
                             <div class="py-4 flex items-center justify-between gap-4">
-                                <div class="flex items-center gap-3 min-w-0">
+                                <a href="{{ route('residential.show', $listing) }}" wire:navigate class="flex items-center gap-3 min-w-0 -m-2 p-2 rounded-lg hover:bg-gray-50 transition">
                                     <x-listing-thumb :photo="$listing->mainPhoto" />
                                     <div class="min-w-0">
                                         <div class="font-medium">{{ number_format($listing->price, 0, '', ' ') }} ₽ · {{ $listing->address }}</div>
@@ -40,22 +40,9 @@
                                             @endif
                                         </div>
                                     </div>
-                                </div>
+                                </a>
                                 <div class="flex items-center gap-3 shrink-0">
-                                    <span @class([
-                                        'text-xs font-medium px-2 py-1 rounded-full',
-                                        'bg-green-100 text-green-800' => $listing->status === 'active',
-                                        'bg-yellow-100 text-yellow-800' => $listing->status === 'moderation',
-                                        'bg-red-100 text-red-800' => $listing->status === 'rejected',
-                                        'bg-gray-100 text-gray-600' => $listing->status === 'archived',
-                                    ])>
-                                        {{ [
-                                            'moderation' => 'На модерации',
-                                            'active' => 'Активно',
-                                            'rejected' => 'Отклонено',
-                                            'archived' => 'В архиве',
-                                        ][$listing->status] ?? $listing->status }}
-                                    </span>
+                                    <x-listing-status-badge :status="$listing->status" />
                                     <a href="{{ route('residential.edit', $listing) }}" wire:navigate class="text-sm text-primary-600 hover:underline">Изменить</a>
                                     @if ($listing->status === 'active')
                                         <form action="{{ route('residential.unpublish', $listing) }}" method="POST" onsubmit="return confirm('Снять объявление с публикации и переместить в архив?');">
@@ -91,7 +78,7 @@
                     <div class="divide-y">
                         @foreach ($commercialListings as $listing)
                             <div class="py-4 flex items-center justify-between gap-4">
-                                <div class="flex items-center gap-3 min-w-0">
+                                <a href="{{ route('commercial.show', $listing) }}" wire:navigate class="flex items-center gap-3 min-w-0 -m-2 p-2 rounded-lg hover:bg-gray-50 transition">
                                     <x-listing-thumb :photo="$listing->mainPhoto" />
                                     <div class="min-w-0">
                                         <div class="font-medium">{{ number_format($listing->display_price ?? 0, 0, '', ' ') }} ₽ · {{ $listing->address }}</div>
@@ -102,22 +89,9 @@
                                             @endif
                                         </div>
                                     </div>
-                                </div>
+                                </a>
                                 <div class="flex items-center gap-3 shrink-0">
-                                    <span @class([
-                                        'text-xs font-medium px-2 py-1 rounded-full',
-                                        'bg-green-100 text-green-800' => $listing->status === 'active',
-                                        'bg-yellow-100 text-yellow-800' => $listing->status === 'moderation',
-                                        'bg-red-100 text-red-800' => $listing->status === 'rejected',
-                                        'bg-gray-100 text-gray-600' => $listing->status === 'archived',
-                                    ])>
-                                        {{ [
-                                            'moderation' => 'На модерации',
-                                            'active' => 'Активно',
-                                            'rejected' => 'Отклонено',
-                                            'archived' => 'В архиве',
-                                        ][$listing->status] ?? $listing->status }}
-                                    </span>
+                                    <x-listing-status-badge :status="$listing->status" />
                                     <a href="{{ route('commercial.edit', $listing) }}" wire:navigate class="text-sm text-primary-600 hover:underline">Изменить</a>
                                     @if ($listing->status === 'active')
                                         <form action="{{ route('commercial.unpublish', $listing) }}" method="POST" onsubmit="return confirm('Снять объявление с публикации и переместить в архив?');">
@@ -153,7 +127,7 @@
                     <div class="divide-y">
                         @foreach ($workspaceListings as $listing)
                             <div class="py-4 flex items-center justify-between gap-4">
-                                <div class="flex items-center gap-3 min-w-0">
+                                <a href="{{ route('workspace.show', $listing) }}" wire:navigate class="flex items-center gap-3 min-w-0 -m-2 p-2 rounded-lg hover:bg-gray-50 transition">
                                     <x-listing-thumb :photo="$listing->mainPhoto" />
                                     <div class="min-w-0">
                                         <div class="font-medium">
@@ -167,22 +141,9 @@
                                             @endif
                                         </div>
                                     </div>
-                                </div>
+                                </a>
                                 <div class="flex items-center gap-3 shrink-0">
-                                    <span @class([
-                                        'text-xs font-medium px-2 py-1 rounded-full',
-                                        'bg-green-100 text-green-800' => $listing->status === 'active',
-                                        'bg-yellow-100 text-yellow-800' => $listing->status === 'moderation',
-                                        'bg-red-100 text-red-800' => $listing->status === 'rejected',
-                                        'bg-gray-100 text-gray-600' => $listing->status === 'archived',
-                                    ])>
-                                        {{ [
-                                            'moderation' => 'На модерации',
-                                            'active' => 'Активно',
-                                            'rejected' => 'Отклонено',
-                                            'archived' => 'В архиве',
-                                        ][$listing->status] ?? $listing->status }}
-                                    </span>
+                                    <x-listing-status-badge :status="$listing->status" />
                                     <a href="{{ route('workspace.edit', $listing) }}" wire:navigate class="text-sm text-primary-600 hover:underline">Изменить</a>
                                     @if ($listing->status === 'active')
                                         <form action="{{ route('workspace.unpublish', $listing) }}" method="POST" onsubmit="return confirm('Снять объявление с публикации и переместить в архив?');">

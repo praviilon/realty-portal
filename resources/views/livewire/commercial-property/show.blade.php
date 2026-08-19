@@ -168,9 +168,20 @@
                  (resources/views/livewire/workspace/show.blade.php). --}}
             <div>
                 <div class="bg-white rounded-xl shadow p-6 sticky top-6">
-                    <h2 class="text-lg font-semibold mb-4">
-                        {{ $listing->owner_type === 'agent' ? 'Агент' : ($listing->deal_type === 'rent' ? 'Арендодатель' : 'Продавец') }}
-                    </h2>
+                    <div class="flex items-start justify-between gap-2 mb-4">
+                        <h2 class="text-lg font-semibold">
+                            {{ $listing->owner_type === 'agent' ? 'Агент' : ($listing->deal_type === 'rent' ? 'Арендодатель' : 'Продавец') }}
+                        </h2>
+
+                        {{-- По просьбе пользователя: автор, просматривающий своё же
+                             объявление по прямой ссылке (в том числе неактивное),
+                             видит здесь, на месте кнопки "Написать", индикатор
+                             статуса объявления — та же цветная "полоска", что и в
+                             личном кабинете. --}}
+                        @if (auth()->id() === $listing->user_id)
+                            <x-listing-status-badge :status="$listing->status" class="shrink-0" />
+                        @endif
+                    </div>
                     <div class="font-medium">{{ $listing->user->full_name }}</div>
                     <div class="text-sm text-gray-500">На сайте с {{ $listing->user->created_at->format('m.Y') }}</div>
                     <div class="mt-2 text-xs inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-600">

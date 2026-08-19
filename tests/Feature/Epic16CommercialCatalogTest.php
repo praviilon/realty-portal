@@ -89,6 +89,36 @@ class Epic16CommercialCatalogTest extends TestCase
         $this->actingAs($owner)->get(route('commercial.show', $listing))->assertOk();
     }
 
+    /**
+     * По просьбе пользователя: на месте кнопки "Написать" (которая автору
+     * самому не нужна) — индикатор статуса объявления, той же цветной
+     * "полоской", что и в личном кабинете.
+     */
+    public function test_owner_sees_status_badge_instead_of_message_button_on_own_moderation_listing(): void
+    {
+        $owner = User::factory()->create();
+        $listing = CommercialProperty::factory()->moderation()->create(['user_id' => $owner->id, 'deal_type' => 'sale']);
+        CommercialSaleDetail::factory()->create(['property_id' => $listing->id]);
+
+        $this->actingAs($owner)
+            ->get(route('commercial.show', $listing))
+            ->assertSee('На модерации')
+            ->assertDontSee('Написать');
+    }
+
+    public function test_stranger_does_not_see_status_badge_and_sees_message_button_instead(): void
+    {
+        $owner = User::factory()->create();
+        $stranger = User::factory()->create();
+        $listing = CommercialProperty::factory()->create(['user_id' => $owner->id, 'status' => 'active', 'deal_type' => 'sale']);
+        CommercialSaleDetail::factory()->create(['property_id' => $listing->id]);
+
+        $this->actingAs($stranger)
+            ->get(route('commercial.show', $listing))
+            ->assertDontSee('Активно')
+            ->assertSee('Написать');
+    }
+
     public function test_map_is_rendered_on_show_page(): void
     {
         $listing = CommercialProperty::factory()->create(['status' => 'active', 'deal_type' => 'sale']);
