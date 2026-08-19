@@ -62,6 +62,11 @@
                                             @csrf
                                             <button type="submit" class="text-sm text-gray-500 hover:text-red-600 hover:underline">Снять с публикации</button>
                                         </form>
+                                    @elseif ($listing->status === 'moderation')
+                                        <form action="{{ route('residential.withdraw', $listing) }}" method="POST" onsubmit="return confirm('Отозвать объявление с модерации и переместить в архив?');">
+                                            @csrf
+                                            <button type="submit" class="text-sm text-gray-500 hover:text-red-600 hover:underline">Отозвать</button>
+                                        </form>
                                     @endif
                                 </div>
                             </div>
@@ -118,6 +123,11 @@
                                         <form action="{{ route('commercial.unpublish', $listing) }}" method="POST" onsubmit="return confirm('Снять объявление с публикации и переместить в архив?');">
                                             @csrf
                                             <button type="submit" class="text-sm text-gray-500 hover:text-red-600 hover:underline">Снять с публикации</button>
+                                        </form>
+                                    @elseif ($listing->status === 'moderation')
+                                        <form action="{{ route('commercial.withdraw', $listing) }}" method="POST" onsubmit="return confirm('Отозвать объявление с модерации и переместить в архив?');">
+                                            @csrf
+                                            <button type="submit" class="text-sm text-gray-500 hover:text-red-600 hover:underline">Отозвать</button>
                                         </form>
                                     @endif
                                 </div>
@@ -178,6 +188,11 @@
                                         <form action="{{ route('workspace.unpublish', $listing) }}" method="POST" onsubmit="return confirm('Снять объявление с публикации и переместить в архив?');">
                                             @csrf
                                             <button type="submit" class="text-sm text-gray-500 hover:text-red-600 hover:underline">Снять с публикации</button>
+                                        </form>
+                                    @elseif ($listing->status === 'moderation')
+                                        <form action="{{ route('workspace.withdraw', $listing) }}" method="POST" onsubmit="return confirm('Отозвать объявление с модерации и переместить в архив?');">
+                                            @csrf
+                                            <button type="submit" class="text-sm text-gray-500 hover:text-red-600 hover:underline">Отозвать</button>
                                         </form>
                                     @endif
                                 </div>

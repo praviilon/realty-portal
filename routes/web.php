@@ -16,6 +16,7 @@ use App\Livewire\Catalog\WorkspaceSearch;
 use App\Livewire\Workspace\CreateWizard as WorkspaceWizard;
 use App\Livewire\Workspace\Show as WorkspaceShow;
 use App\Http\Controllers\ListingUnpublishController;
+use App\Http\Controllers\ListingWithdrawController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomePage::class)->name('home');
@@ -64,6 +65,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/account/listings/{residentialProperty}/unpublish', [ListingUnpublishController::class, 'residential'])->name('residential.unpublish');
     Route::post('/account/commercial-listings/{commercialProperty}/unpublish', [ListingUnpublishController::class, 'commercial'])->name('commercial.unpublish');
     Route::post('/account/workspaces/{workspace}/unpublish', [ListingUnpublishController::class, 'workspace'])->name('workspace.unpublish');
+
+    // Доработка по повторной просьбе пользователя: отзыв собственного
+    // объявления, ожидающего модерации, тоже "в архив" — та же схема, что
+    // и unpublish выше, но для статуса 'moderation'. См. ListingWithdrawController.
+    Route::post('/account/listings/{residentialProperty}/withdraw', [ListingWithdrawController::class, 'residential'])->name('residential.withdraw');
+    Route::post('/account/commercial-listings/{commercialProperty}/withdraw', [ListingWithdrawController::class, 'commercial'])->name('commercial.withdraw');
+    Route::post('/account/workspaces/{workspace}/withdraw', [ListingWithdrawController::class, 'workspace'])->name('workspace.withdraw');
 
     Route::get('/account/chats', ChatInbox::class)->name('chat.index');
     Route::get('/account/chats/{chat}', ChatThread::class)->name('chat.show');
