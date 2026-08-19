@@ -116,9 +116,12 @@ class UserResource extends Resource
                         // Та же логика, что и при самостоятельном удалении
                         // профиля пользователем (см.
                         // resources/views/livewire/profile/delete-user-form.blade.php):
-                        // просто удаляем запись, остальное — на каскадных
-                        // внешних ключах миграций.
-                        $record->delete();
+                        // User::deleteAccount() явно чистит фото объявлений
+                        // (файлы + записи) и уведомления, а не только сами
+                        // объявления — каскадные внешние ключи миграций эти
+                        // две полиморфные таблицы не подчищают (см.
+                        // подробный комментарий в App\Models\User::deleteAccount()).
+                        $record->deleteAccount();
 
                         Notification::make()
                             ->title('Пользователь удалён')

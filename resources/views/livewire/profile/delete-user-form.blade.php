@@ -17,7 +17,11 @@ new class extends Component
             'password' => ['required', 'string', 'current_password'],
         ]);
 
-        tap(Auth::user(), $logout(...))->delete();
+        // ИЗМЕНЕНО (по просьбе пользователя): раньше ->delete() полагался
+        // на каскадные внешние ключи миграций, которые не подчищают фото
+        // объявлений и уведомления (полиморфные связи без FK на уровне БД
+        // — см. подробный комментарий в App\Models\User::deleteAccount()).
+        tap(Auth::user(), $logout(...))->deleteAccount();
 
         $this->redirect('/', navigate: true);
     }

@@ -26,6 +26,14 @@ class CreateWizard extends Component
 {
     use WithFileUploads;
 
+    /**
+     * Лимит фото на объявление — по просьбе пользователя (раньше выбор
+     * слишком большого количества фото за раз мог "класть" страницу с
+     * ошибкой 503 на этапе загрузки). См. также App\Livewire\Property\CreateWizard
+     * и App\Livewire\Workspace\CreateWizard — одинаковый лимит везде.
+     */
+    protected const MAX_PHOTOS = 5;
+
     public int $step = 1;
 
     public ?CommercialProperty $editing = null;
@@ -93,6 +101,15 @@ class CreateWizard extends Component
     // Шаг 5
     /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile[] */
     public array $newPhotos = [];
+
+    /**
+     * Промежуточное свойство, к которому привязан сам <input type="file">
+     * (см. x-photo-dropzone) — исправление бага, из-за которого повторный
+     * выбор файлов ПОЛНОСТЬЮ заменял $newPhotos вместо добавления к нему
+     * (стандартное поведение wire:model на файловом input). См.
+     * updatedIncomingPhotos() ниже.
+     */
+    public array $incomingPhotos = [];
 
     public function mount(?CommercialProperty $commercialProperty = null): void
     {
@@ -182,10 +199,32 @@ class CreateWizard extends Component
                 'commission' => ['nullable', 'integer', 'min:0'],
             ],
             5 => [
+                // Доп. проверка на сервере (даже если клиентское
+                // ограничение в x-photo-dropzone почему-то не сработало) —
+                // общее число фото (уже загруженные + новые) не больше
+                // MAX_PHOTOS.
+                'newPhotos' => [function ($attribute, $value, $fail) {
+                    if ($this->totalPhotoCount() > self::MAX_PHOTOS) {
+                        $fail('Можно загрузить не более ' . self::MAX_PHOTOS . ' фотографий на одно объявление.');
+                    }
+                }],
                 'newPhotos.*' => ['nullable', 'image', 'max:5120'],
             ],
             default => [],
         };
+    }
+
+    /**
+     * Общее число фото объявления: уже сохранённые (при редактировании) +
+     * ещё не отправленные $newPhotos. Используется и для лимита при выборе
+     * новых файлов (updatedIncomingPhotos), и при финальной проверке в
+     * rulesForStep(5).
+     */
+    protected function totalPhotoCount(): int
+    {
+        $existingCount = $this->editing ? $this->editing->photos()->count() : 0;
+
+        return $existingCount + count($this->newPhotos);
     }
 
     public function nextStep(): void
@@ -207,10 +246,74 @@ class CreateWizard extends Component
         }
     }
 
+    /**
+     * Объединяет только что выбранные файлы (несут в $incomingPhotos, к
+     * которому привязан сам <input>) с уже накопленными в $newPhotos —
+     * исправление бага, при котором повторный выбор фото стирал ранее
+     * выбранные. Лишние сверх лимита файлы отбрасываются и сразу удаляются
+     * из временного хранилища (иначе они остались бы висеть в
+     * storage/app/livewire-tmp, ни разу не попав в объявление — та же
+     * проблема "фото остаются в базе", которую попросили исправить).
+     */
+    public function updatedIncomingPhotos(): void
+    {
+        $this->resetErrorBag('incomingPhotos');
+
+        $this->validate([
+            'incomingPhotos.*' => ['nullable', 'image', 'max:5120'],
+        ]);
+
+        $slotsLeft = max(0, self::MAX_PHOTOS - $this->totalPhotoCount());
+
+        foreach ($this->incomingPhotos as $index => $photo) {
+            if ($index >= $slotsLeft) {
+                $photo->delete();
+
+                continue;
+            }
+
+            $this->newPhotos[] = $photo;
+        }
+
+        if (count($this->incomingPhotos) > $slotsLeft) {
+            $this->addError('incomingPhotos', 'Можно загрузить не более ' . self::MAX_PHOTOS . ' фотографий на одно объявление.');
+        }
+
+        $this->incomingPhotos = [];
+    }
+
     public function removeNewPhoto(int $index): void
     {
+        // Удаляем сам временный файл (не только запись в массиве) — иначе
+        // он остаётся висеть в storage/app/livewire-tmp до плановой
+        // очистки Livewire, даже если пользователь отменил загрузку сразу
+        // после выбора фото.
+        if (isset($this->newPhotos[$index]) && method_exists($this->newPhotos[$index], 'delete')) {
+            $this->newPhotos[$index]->delete();
+        }
+
         unset($this->newPhotos[$index]);
         $this->newPhotos = array_values($this->newPhotos);
+    }
+
+    /**
+     * Удаление уже сохранённого (не нового) фото при редактировании
+     * объявления — раньше такой возможности не было вовсе (у уже
+     * загруженных фото не было крестика). ->delete() на модели
+     * PropertyPhoto удаляет и файл в storage (см. App\Models\PropertyPhoto::booted()).
+     */
+    public function removeExistingPhoto(int $photoId): void
+    {
+        if (! $this->editing) {
+            return;
+        }
+
+        $photo = $this->editing->photos()->whereKey($photoId)->first();
+
+        if ($photo) {
+            $photo->delete();
+            $this->editing->load('photos');
+        }
     }
 
     public function submit(): void
@@ -315,6 +418,8 @@ class CreateWizard extends Component
             'furnitureLabels' => CommercialProperty::furnitureLabels(),
             'floorFeatureLabels' => CommercialProperty::floorFeatureLabels(),
             'rentTypeLabels' => CommercialProperty::rentTypeLabels(),
+            'photoSlotsRemaining' => max(0, self::MAX_PHOTOS - $this->totalPhotoCount()),
+            'maxPhotos' => self::MAX_PHOTOS,
         ]);
     }
 }

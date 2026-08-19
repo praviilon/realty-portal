@@ -242,21 +242,27 @@
             @if ($step === 5)
                 <div class="space-y-4">
                     <div>
-                        <x-input-label for="newPhotos" value="Фотографии (необязательно)" />
-                        <x-photo-dropzone class="mt-1" />
+                        <x-input-label for="newPhotos" :value="'Фотографии (необязательно, максимум ' . $maxPhotos . ')'" />
+                        <p class="text-xs text-gray-400 mb-1">Осталось слотов: {{ $photoSlotsRemaining }} из {{ $maxPhotos }}</p>
+                        <x-photo-dropzone class="mt-1" :remaining="$photoSlotsRemaining" />
+                        <x-input-error :messages="$errors->get('incomingPhotos.*')" class="mt-2" />
+                        <x-input-error :messages="$errors->get('newPhotos')" class="mt-2" />
                         <x-input-error :messages="$errors->get('newPhotos.*')" class="mt-2" />
-                        <div wire:loading wire:target="newPhotos" class="text-xs text-gray-400 mt-1">Загрузка...</div>
+                        <div wire:loading wire:target="incomingPhotos" class="text-xs text-gray-400 mt-1">Загрузка...</div>
                     </div>
 
                     @if (count($newPhotos))
-                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                            @foreach ($newPhotos as $index => $photo)
-                                <div class="relative">
-                                    <img src="{{ $photo->temporaryUrl() }}" class="w-full h-24 object-cover rounded-lg">
-                                    <button type="button" wire:click="removeNewPhoto({{ $index }})"
-                                            class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 text-xs">&times;</button>
-                                </div>
-                            @endforeach
+                        <div>
+                            <p class="text-sm text-gray-500 mb-2">Новые фото (ещё не сохранены):</p>
+                            <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                                @foreach ($newPhotos as $index => $photo)
+                                    <div class="relative">
+                                        <img src="{{ $photo->temporaryUrl() }}" class="w-full h-24 object-cover rounded-lg">
+                                        <button type="button" wire:click="removeNewPhoto({{ $index }})"
+                                                class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 text-xs">&times;</button>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     @endif
 
@@ -264,8 +270,16 @@
                         <div>
                             <p class="text-sm text-gray-500 mb-2">Уже загруженные фото:</p>
                             <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                                {{-- ИЗМЕНЕНО (по просьбе пользователя): раньше у уже
+                                     загруженных фото не было крестика — удалить их
+                                     было невозможно. --}}
                                 @foreach ($editing->photos as $photo)
-                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($photo->path) }}" class="w-full h-24 object-cover rounded-lg">
+                                    <div class="relative">
+                                        <img src="{{ \Illuminate\Support\Facades\Storage::url($photo->path) }}" class="w-full h-24 object-cover rounded-lg">
+                                        <button type="button" wire:click="removeExistingPhoto({{ $photo->id }})"
+                                                wire:confirm="Удалить это фото? Действие необратимо."
+                                                class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 text-xs">&times;</button>
+                                    </div>
                                 @endforeach
                             </div>
                         </div>

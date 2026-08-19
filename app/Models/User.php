@@ -98,6 +98,49 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
     }
 
     /**
+     * Полное удаление пользователя вместе со всеми его данными — по
+     * просьбе пользователя ("удаление реально удаляло фото и уведомления").
+     *
+     * Раньше и самостоятельное удаление профиля
+     * (resources/views/livewire/profile/delete-user-form.blade.php), и
+     * удаление администратором (App\Filament\Resources\UserResource)
+     * просто вызывали ->delete() на модели, полагаясь на каскадные внешние
+     * ключи миграций. Это действительно удаляет сами объявления
+     * (residential_properties/commercial_properties/workspaces —
+     * foreignId('user_id')->cascadeOnDelete()), но НЕ фото объявлений и НЕ
+     * уведомления: обе эти таблицы — полиморфные связи без внешнего ключа
+     * на уровне БД (см. миграции create_property_photos_table и
+     * create_notifications_table), поэтому ON DELETE CASCADE в принципе не
+     * может их подчистить. Более того, каскад через FK выполняется на
+     * уровне СУБД и не поднимает события Eloquent-моделей, так что даже
+     * добавленный в PropertyPhoto::booted() хук 'deleting' не сработал бы
+     * для фото объявлений, удалённых таким каскадом.
+     *
+     * Поэтому здесь фото и уведомления удаляются явно, через сами модели
+     * (чтобы у PropertyPhoto сработало событие 'deleting' и файл в storage
+     * тоже удалился — см. App\Models\PropertyPhoto), и только после этого
+     * удаляется сам пользователь (объявления и всё остальное с
+     * cascadeOnDelete по-прежнему подчищаются штатным каскадом БД).
+     */
+    public function deleteAccount(): void
+    {
+        foreach (['residentialProperties', 'commercialProperties', 'workspaces'] as $relation) {
+            $this->$relation->each(function ($listing) {
+                $listing->photos()->get()->each->delete();
+            });
+        }
+
+        // У уведомлений нет файлов в storage — обычный bulk delete() безопасен.
+        $this->notifications()->delete();
+
+        if ($this->avatar_path) {
+            Storage::disk('public')->delete($this->avatar_path);
+        }
+
+        $this->delete();
+    }
+
+    /**
      * Имя пользователя для интерфейса Filament (шапка админ-панели, аватар-заглушка).
      */
     public function getFilamentName(): string
