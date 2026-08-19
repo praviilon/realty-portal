@@ -41,12 +41,25 @@ class CreateWizard extends Component
 
     public ?float $lng = null;
 
+    public ?string $metroStation = null;
+
+    public ?int $metroDistanceMin = null;
+
     // Шаг 3
     public ?int $area = null;
 
     public ?int $floor = null;
 
     public ?int $totalFloors = null;
+
+    public string $heatingType = 'central';
+
+    public string $finishingType = 'fine';
+
+    public string $furniture = 'none';
+
+    /** @var string[] */
+    public array $floorFeatures = [];
 
     public ?int $price = null;
 
@@ -67,9 +80,21 @@ class CreateWizard extends Component
             $this->address = $residentialProperty->address;
             $this->lat = (float) $residentialProperty->lat;
             $this->lng = (float) $residentialProperty->lng;
+            $this->metroStation = $residentialProperty->metro_station;
+            $this->metroDistanceMin = $residentialProperty->metro_distance_min;
             $this->area = $residentialProperty->area;
             $this->floor = $residentialProperty->floor;
             $this->totalFloors = $residentialProperty->total_floors;
+            $this->heatingType = $residentialProperty->heating_type ?? 'central';
+            $this->finishingType = $residentialProperty->finishing_type ?? 'fine';
+            $this->furniture = $residentialProperty->furniture ?? 'none';
+            // array_intersect — на случай, если у объявления сохранено
+            // значение, которого больше нет в ResidentialProperty::floorFeatureLabels()
+            // (см. аналогичную защиту в App\Livewire\Workspace\CreateWizard).
+            $this->floorFeatures = array_values(array_intersect(
+                $residentialProperty->floor_features ?? [],
+                array_keys(ResidentialProperty::floorFeatureLabels())
+            ));
             $this->price = $residentialProperty->price;
             $this->description = $residentialProperty->description;
         }
@@ -86,11 +111,18 @@ class CreateWizard extends Component
                 'address' => ['required', 'string', 'min:5', 'max:255'],
                 'lat' => ['required', 'numeric', 'between:-90,90'],
                 'lng' => ['required', 'numeric', 'between:-180,180'],
+                'metroStation' => ['nullable', 'string', 'max:255'],
+                'metroDistanceMin' => ['nullable', 'integer', 'min:0', 'max:180'],
             ],
             3 => [
                 'area' => ['required', 'integer', 'min:1', 'max:100000'],
                 'floor' => ['required', 'integer', 'min:1', 'max:200'],
                 'totalFloors' => ['required', 'integer', 'min:1', 'max:200', 'gte:floor'],
+                'heatingType' => ['nullable', 'in:central,autonomous,none'],
+                'finishingType' => ['nullable', 'in:none,rough,fine'],
+                'furniture' => ['nullable', 'in:none,partial,full'],
+                'floorFeatures' => ['array'],
+                'floorFeatures.*' => ['string', 'in:no_elevator'],
                 'price' => ['required', 'integer', 'min:1'],
                 'description' => ['required', 'string', 'min:10', 'max:5000'],
             ],
@@ -142,9 +174,15 @@ class CreateWizard extends Component
             'address' => $this->address,
             'lat' => $this->lat,
             'lng' => $this->lng,
+            'metro_station' => $this->metroStation ?: null,
+            'metro_distance_min' => $this->metroDistanceMin,
             'area' => $this->area,
             'floor' => $this->floor,
             'total_floors' => $this->totalFloors,
+            'heating_type' => $this->heatingType,
+            'finishing_type' => $this->finishingType,
+            'furniture' => $this->furniture,
+            'floor_features' => $this->floorFeatures,
             'price' => $this->price,
             'description' => $this->description,
             // Любое создание/редактирование уходит на повторную модерацию.
@@ -185,6 +223,10 @@ class CreateWizard extends Component
         return view('livewire.property.create-wizard', [
             'propertyTypeLabels' => ResidentialProperty::propertyTypeLabels(),
             'dealTypeLabels' => ResidentialProperty::dealTypeLabels(),
+            'heatingTypeLabels' => ResidentialProperty::heatingTypeLabels(),
+            'finishingTypeLabels' => ResidentialProperty::finishingTypeLabels(),
+            'furnitureLabels' => ResidentialProperty::furnitureLabels(),
+            'floorFeatureLabels' => ResidentialProperty::floorFeatureLabels(),
         ]);
     }
 }

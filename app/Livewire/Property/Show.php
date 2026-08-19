@@ -64,6 +64,12 @@ class Show extends Component
             'address' => $this->listing->address,
         ]];
 
-        return view('livewire.property.show', ['pin' => $pin]);
+        return view('livewire.property.show', [
+            'pin' => $pin,
+            'heatingTypeLabels' => ResidentialProperty::heatingTypeLabels(),
+            'finishingTypeLabels' => ResidentialProperty::finishingTypeLabels(),
+            'furnitureLabels' => ResidentialProperty::furnitureLabels(),
+            'floorFeatureLabels' => ResidentialProperty::floorFeatureLabels(),
+        ]);
     }
 }

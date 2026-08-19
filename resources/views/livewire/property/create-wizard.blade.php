@@ -80,6 +80,18 @@
                     <p class="text-xs text-gray-400">
                         Адрес, широта и долгота заполняются автоматически — выберите адрес из подсказок или кликните точку на карте ниже.
                     </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <x-input-label for="metroStation" value="Станция метро (необязательно)" />
+                            <x-text-input wire:model="metroStation" id="metroStation" type="text" class="mt-1 block w-full" />
+                            <x-input-error :messages="$errors->get('metroStation')" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="metroDistanceMin" value="Минут пешком до метро (необязательно)" />
+                            <x-text-input wire:model="metroDistanceMin" id="metroDistanceMin" type="number" class="mt-1 block w-full" />
+                            <x-input-error :messages="$errors->get('metroDistanceMin')" class="mt-2" />
+                        </div>
+                    </div>
                 </div>
             @endif
 
@@ -107,7 +119,48 @@
                             <x-text-input wire:model="totalFloors" id="totalFloors" type="number" class="mt-1 block w-full" />
                             <x-input-error :messages="$errors->get('totalFloors')" class="mt-2" />
                         </div>
+                        <div>
+                            <x-input-label for="heatingType" value="Отопление" />
+                            <select wire:model="heatingType" id="heatingType" class="mt-1 rounded-lg border-gray-300 w-full">
+                                @foreach ($heatingTypeLabels as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('heatingType')" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="finishingType" value="Отделка" />
+                            <select wire:model="finishingType" id="finishingType" class="mt-1 rounded-lg border-gray-300 w-full">
+                                @foreach ($finishingTypeLabels as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('finishingType')" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="furniture" value="Мебель" />
+                            <select wire:model="furniture" id="furniture" class="mt-1 rounded-lg border-gray-300 w-full">
+                                @foreach ($furnitureLabels as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('furniture')" class="mt-2" />
+                        </div>
                     </div>
+
+                    <div>
+                        <x-input-label value="Особенности помещения" />
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            @foreach ($floorFeatureLabels as $value => $label)
+                                <label class="flex items-center gap-2 text-sm text-gray-700">
+                                    <input type="checkbox" wire:model="floorFeatures" value="{{ $value }}" class="rounded border-gray-300 text-primary-600">
+                                    {{ $label }}
+                                </label>
+                            @endforeach
+                        </div>
+                        <x-input-error :messages="$errors->get('floorFeatures')" class="mt-2" />
+                    </div>
+
                     <div>
                         <x-input-label for="description" value="Описание" />
                         <textarea wire:model="description" id="description" rows="5" class="mt-1 rounded-lg border-gray-300 w-full"></textarea>

@@ -47,11 +47,57 @@
                             <dt class="text-gray-500">Этаж</dt>
                             <dd class="font-medium">{{ $listing->floor }} / {{ $listing->total_floors }}</dd>
                         </div>
+                        @if ($listing->metro_station)
+                            <div>
+                                <dt class="text-gray-500">Метро</dt>
+                                <dd class="font-medium">
+                                    {{ $listing->metro_station }}
+                                    @if ($listing->metro_distance_min)
+                                        · {{ $listing->metro_distance_min }} мин пешком
+                                    @endif
+                                </dd>
+                            </div>
+                        @endif
+                        @if ($listing->heating_type)
+                            <div>
+                                <dt class="text-gray-500">Отопление</dt>
+                                <dd class="font-medium">{{ $heatingTypeLabels[$listing->heating_type] ?? $listing->heating_type }}</dd>
+                            </div>
+                        @endif
+                        @if ($listing->finishing_type)
+                            <div>
+                                <dt class="text-gray-500">Отделка</dt>
+                                <dd class="font-medium">{{ $finishingTypeLabels[$listing->finishing_type] ?? $listing->finishing_type }}</dd>
+                            </div>
+                        @endif
+                        @if ($listing->furniture)
+                            <div>
+                                <dt class="text-gray-500">Мебель</dt>
+                                <dd class="font-medium">{{ $furnitureLabels[$listing->furniture] ?? $listing->furniture }}</dd>
+                            </div>
+                        @endif
                         <div>
                             <dt class="text-gray-500">Просмотры</dt>
                             <dd class="font-medium">{{ $listing->views_count }}</dd>
                         </div>
                     </dl>
+
+                    {{-- Особенности помещения (floor_features) — array_intersect отсекает
+                         значения, которых больше нет в ResidentialProperty::floorFeatureLabels()
+                         (см. аналогичную защиту на странице рабочего пространства). --}}
+                    @php($visibleFloorFeatures = array_intersect($listing->floor_features ?? [], array_keys($floorFeatureLabels)))
+                    @if (!empty($visibleFloorFeatures))
+                        <div class="mt-4">
+                            <h3 class="text-sm font-medium text-gray-500 mb-2">Особенности помещения</h3>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ($visibleFloorFeatures as $feature)
+                                    <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                                        {{ $floorFeatureLabels[$feature] }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
 
                     <div class="mt-6">
                         <h2 class="text-lg font-semibold mb-2">Описание</h2>

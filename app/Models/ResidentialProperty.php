@@ -20,9 +20,15 @@ class ResidentialProperty extends Model
         'address',
         'lat',
         'lng',
+        'metro_station',
+        'metro_distance_min',
         'area',
         'floor',
         'total_floors',
+        'heating_type',
+        'finishing_type',
+        'furniture',
+        'floor_features',
         'price',
         'description',
         'status',
@@ -33,6 +39,7 @@ class ResidentialProperty extends Model
     protected $casts = [
         'lat' => 'decimal:7',
         'lng' => 'decimal:7',
+        'floor_features' => 'array',
     ];
 
     public function user(): BelongsTo
@@ -88,6 +95,40 @@ class ResidentialProperty extends Model
     public function getPropertyTypeLabelAttribute(): string
     {
         return self::propertyTypeLabels()[$this->property_type] ?? $this->property_type;
+    }
+
+    /**
+     * Отопление/отделка/мебель — те же варианты значений, что и у
+     * коммерческой недвижимости (по просьбе пользователя), поэтому метки
+     * просто делегируются в App\Models\CommercialProperty, а не дублируются
+     * здесь — по тому же принципу, что и App\Models\Workspace::buildingTypeLabels()/
+     * entranceTypeLabels().
+     */
+    public static function heatingTypeLabels(): array
+    {
+        return CommercialProperty::heatingTypeLabels();
+    }
+
+    public static function finishingTypeLabels(): array
+    {
+        return CommercialProperty::finishingTypeLabels();
+    }
+
+    public static function furnitureLabels(): array
+    {
+        return CommercialProperty::furnitureLabels();
+    }
+
+    /**
+     * "Особенности помещения" — по аналогии с коммерческой недвижимостью и
+     * рабочими пространствами, но для жилой недвижимости пока только один
+     * пункт (по просьбе пользователя).
+     */
+    public static function floorFeatureLabels(): array
+    {
+        return [
+            'no_elevator' => 'Нет лифта',
+        ];
     }
 
     /**

@@ -52,6 +52,113 @@ class Epic7CreateWizardTest extends TestCase
         ]);
     }
 
+    /**
+     * Доработка по просьбе пользователя: "Отделка"/"Отопление"/"Мебель" (те же
+     * варианты, что и у коммерческой недвижимости), чекбокс "Нет лифта" в
+     * "особенностях помещения" (шаг 3) и станция метро/минуты пешком (шаг 2,
+     * по аналогии с рабочими пространствами).
+     */
+    public function test_user_can_create_listing_with_new_characteristics_and_metro(): void
+    {
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Property\CreateWizard::class)
+            ->set('dealType', 'sale')
+            ->set('propertyType', 'apartment')
+            ->call('nextStep')
+            ->assertSet('step', 2)
+            ->set('address', 'г. Москва, ул. Тестовая, д. 5')
+            ->set('lat', 55.751244)
+            ->set('lng', 37.618423)
+            ->set('metroStation', 'Тверская')
+            ->set('metroDistanceMin', 6)
+            ->call('nextStep')
+            ->assertSet('step', 3)
+            ->set('area', 45)
+            ->set('floor', 3)
+            ->set('totalFloors', 9)
+            ->set('heatingType', 'autonomous')
+            ->set('finishingType', 'rough')
+            ->set('furniture', 'partial')
+            ->set('floorFeatures', ['no_elevator'])
+            ->set('price', 6500000)
+            ->set('description', 'Отличная квартира рядом с метро.')
+            ->call('nextStep')
+            ->assertSet('step', 4)
+            ->call('submit')
+            ->assertRedirect(route('dashboard'));
+
+        $listing = ResidentialProperty::first();
+        $this->assertNotNull($listing);
+        $this->assertSame('Тверская', $listing->metro_station);
+        $this->assertSame(6, $listing->metro_distance_min);
+        $this->assertSame('autonomous', $listing->heating_type);
+        $this->assertSame('rough', $listing->finishing_type);
+        $this->assertSame('partial', $listing->furniture);
+        $this->assertSame(['no_elevator'], $listing->floor_features);
+    }
+
+    public function test_metro_fields_are_optional(): void
+    {
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Property\CreateWizard::class)
+            ->call('nextStep')
+            ->set('address', 'г. Москва, ул. Тестовая, д. 5')
+            ->set('lat', 55.751244)
+            ->set('lng', 37.618423)
+            ->call('nextStep')
+            ->assertHasNoErrors(['metroStation', 'metroDistanceMin'])
+            ->assertSet('step', 3);
+    }
+
+    public function test_invalid_floor_feature_value_is_rejected(): void
+    {
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Property\CreateWizard::class)
+            ->call('nextStep')
+            ->set('address', 'г. Москва, ул. Тестовая, д. 5')
+            ->set('lat', 55.751244)
+            ->set('lng', 37.618423)
+            ->call('nextStep')
+            ->set('area', 45)
+            ->set('floor', 3)
+            ->set('totalFloors', 9)
+            ->set('floorFeatures', ['has_pool'])
+            ->set('price', 6500000)
+            ->set('description', 'Отличная квартира рядом с метро.')
+            ->call('nextStep')
+            ->assertHasErrors(['floorFeatures.0'])
+            ->assertSet('step', 3);
+    }
+
+    public function test_editing_prefills_new_characteristics(): void
+    {
+        $user = User::factory()->create();
+        $listing = ResidentialProperty::factory()->create([
+            'user_id' => $user->id,
+            'metro_station' => 'Парк Культуры',
+            'metro_distance_min' => 10,
+            'heating_type' => 'central',
+            'finishing_type' => 'fine',
+            'furniture' => 'full',
+            'floor_features' => ['no_elevator'],
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Property\CreateWizard::class, ['residentialProperty' => $listing])
+            ->assertSet('metroStation', 'Парк Культуры')
+            ->assertSet('metroDistanceMin', 10)
+            ->assertSet('heatingType', 'central')
+            ->assertSet('finishingType', 'fine')
+            ->assertSet('furniture', 'full')
+            ->assertSet('floorFeatures', ['no_elevator']);
+    }
+
     public function test_step1_validation_blocks_progress(): void
     {
         $user = User::factory()->create();
