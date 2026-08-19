@@ -32,7 +32,7 @@ class Epic6PropertyShowTest extends TestCase
             ->assertSee('7 500 000')
             ->assertSee('54')
             ->assertSee('Пётр Иванов')
-            ->assertSee('Написать продавцу');
+            ->assertSee('Написать');
     }
 
     public function test_show_page_displays_photos_when_present(): void

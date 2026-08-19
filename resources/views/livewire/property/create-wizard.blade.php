@@ -25,7 +25,9 @@
                 <div class="space-y-4">
                     <div>
                         <x-input-label for="dealType" value="Тип сделки" />
-                        <select wire:model="dealType" id="dealType" class="mt-1 rounded-lg border-gray-300 w-full">
+                        {{-- .live — чтобы подпись поля "Кто сдаёт"/"Кто продаёт" ниже
+                             обновлялась сразу при переключении типа сделки. --}}
+                        <select wire:model.live="dealType" id="dealType" class="mt-1 rounded-lg border-gray-300 w-full">
                             @foreach ($dealTypeLabels as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
@@ -40,6 +42,30 @@
                             @endforeach
                         </select>
                         <x-input-error :messages="$errors->get('propertyType')" class="mt-2" />
+                    </div>
+
+                    {{-- Кто разместил объявление / способ связи — по аналогии с
+                         рабочими пространствами (App\Livewire\Workspace\CreateWizard).
+                         В отличие от рабочих пространств у жилой недвижимости есть
+                         продажа, поэтому подпись поля зависит от dealType. --}}
+                    <div>
+                        <x-input-label for="ownerType" :value="$dealType === 'rent' ? 'Кто сдаёт' : 'Кто продаёт'" />
+                        <select wire:model="ownerType" id="ownerType" class="mt-1 rounded-lg border-gray-300 w-full">
+                            @foreach ($ownerTypeLabels as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('ownerType')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <x-input-label for="contactType" value="Как связываться" />
+                        <select wire:model="contactType" id="contactType" class="mt-1 rounded-lg border-gray-300 w-full">
+                            @foreach ($contactTypeLabels as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('contactType')" class="mt-2" />
                     </div>
                 </div>
             @endif

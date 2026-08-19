@@ -34,6 +34,8 @@ class ResidentialProperty extends Model
         'commission',
         'rent_type',
         'utilities_included',
+        'owner_type',
+        'contact_type',
         'description',
         'status',
         'rejection_reason',
@@ -139,6 +141,34 @@ class ResidentialProperty extends Model
         return [
             'no_elevator' => 'Нет лифта',
         ];
+    }
+
+    /**
+     * Кто разместил объявление (собственник/агент) и способ связи —
+     * доработка по просьбе пользователя, чтобы на странице объекта не
+     * всегда отображалось "Продавец" (см. show.blade.php). Значения те же,
+     * что и у рабочих пространств, поэтому метки делегируются в
+     * App\Models\Workspace, а не дублируются (см. аналогичный принцип для
+     * heatingTypeLabels()/finishingTypeLabels() выше).
+     */
+    public static function ownerTypeLabels(): array
+    {
+        return Workspace::ownerTypeLabels();
+    }
+
+    public static function contactTypeLabels(): array
+    {
+        return Workspace::contactTypeLabels();
+    }
+
+    public function getOwnerTypeLabelAttribute(): string
+    {
+        return self::ownerTypeLabels()[$this->owner_type] ?? $this->owner_type;
+    }
+
+    public function getContactTypeLabelAttribute(): string
+    {
+        return self::contactTypeLabels()[$this->contact_type] ?? $this->contact_type;
     }
 
     /**

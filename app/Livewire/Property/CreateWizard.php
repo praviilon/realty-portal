@@ -34,6 +34,13 @@ class CreateWizard extends Component
 
     public string $propertyType = 'apartment';
 
+    // Кто разместил объявление и способ связи — по аналогии с
+    // App\Livewire\Workspace\CreateWizard (значения те же: owner/agent,
+    // calls_and_messages/messages_only).
+    public string $ownerType = 'owner';
+
+    public string $contactType = 'calls_and_messages';
+
     // Шаг 2
     public string $address = '';
 
@@ -89,6 +96,8 @@ class CreateWizard extends Component
             $this->editing = $residentialProperty;
             $this->dealType = $residentialProperty->deal_type;
             $this->propertyType = $residentialProperty->property_type;
+            $this->ownerType = $residentialProperty->owner_type;
+            $this->contactType = $residentialProperty->contact_type;
             $this->address = $residentialProperty->address;
             $this->lat = (float) $residentialProperty->lat;
             $this->lng = (float) $residentialProperty->lng;
@@ -128,6 +137,8 @@ class CreateWizard extends Component
             1 => [
                 'dealType' => ['required', 'in:sale,rent'],
                 'propertyType' => ['required', 'in:apartment,house,room,studio'],
+                'ownerType' => ['required', 'in:owner,agent'],
+                'contactType' => ['required', 'in:calls_and_messages,messages_only'],
             ],
             2 => [
                 'address' => ['required', 'string', 'min:5', 'max:255'],
@@ -203,6 +214,8 @@ class CreateWizard extends Component
             'user_id' => Auth::id(),
             'deal_type' => $this->dealType,
             'property_type' => $this->propertyType,
+            'owner_type' => $this->ownerType,
+            'contact_type' => $this->contactType,
             'address' => $this->address,
             'lat' => $this->lat,
             'lng' => $this->lng,
@@ -274,6 +287,8 @@ class CreateWizard extends Component
         return view('livewire.property.create-wizard', [
             'propertyTypeLabels' => ResidentialProperty::propertyTypeLabels(),
             'dealTypeLabels' => ResidentialProperty::dealTypeLabels(),
+            'ownerTypeLabels' => ResidentialProperty::ownerTypeLabels(),
+            'contactTypeLabels' => ResidentialProperty::contactTypeLabels(),
             'heatingTypeLabels' => ResidentialProperty::heatingTypeLabels(),
             'finishingTypeLabels' => ResidentialProperty::finishingTypeLabels(),
             'furnitureLabels' => ResidentialProperty::furnitureLabels(),

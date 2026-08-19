@@ -28,6 +28,8 @@ class CommercialProperty extends Model
         'heating_type',
         'finishing_type',
         'furniture',
+        'owner_type',
+        'contact_type',
         'address',
         'metro_station',
         'metro_distance_min',
@@ -181,6 +183,33 @@ class CommercialProperty extends Model
             'direct' => 'Прямая аренда',
             'sublease' => 'Субаренда',
         ];
+    }
+
+    /**
+     * Кто разместил объявление (собственник/агент) и способ связи —
+     * доработка по просьбе пользователя, чтобы на странице объекта не
+     * всегда отображалось "Продавец" (см. show.blade.php). Значения те же,
+     * что и у рабочих пространств, поэтому метки делегируются в
+     * App\Models\Workspace (по аналогии с App\Models\ResidentialProperty).
+     */
+    public static function ownerTypeLabels(): array
+    {
+        return Workspace::ownerTypeLabels();
+    }
+
+    public static function contactTypeLabels(): array
+    {
+        return Workspace::contactTypeLabels();
+    }
+
+    public function getOwnerTypeLabelAttribute(): string
+    {
+        return self::ownerTypeLabels()[$this->owner_type] ?? $this->owner_type;
+    }
+
+    public function getContactTypeLabelAttribute(): string
+    {
+        return self::contactTypeLabels()[$this->contact_type] ?? $this->contact_type;
     }
 
     public function getDealTypeLabelAttribute(): string

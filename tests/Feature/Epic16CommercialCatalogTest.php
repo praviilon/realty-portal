@@ -34,7 +34,7 @@ class Epic16CommercialCatalogTest extends TestCase
             ->assertSee('25 000 000')
             ->assertSee('120')
             ->assertSee('Пётр Иванов')
-            ->assertSee('Написать продавцу');
+            ->assertSee('Написать');
     }
 
     public function test_rent_listing_shows_price_per_month_and_deposit(): void

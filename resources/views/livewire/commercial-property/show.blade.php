@@ -161,17 +161,26 @@
                 </div>
             </div>
 
-            <!-- Продавец -->
+            {{-- Владелец/агент — доработка по просьбе пользователя: раньше здесь
+                 всегда было написано "Продавец", даже для аренды или когда
+                 объявление разместил агент. Заголовок теперь зависит от
+                 owner_type/deal_type, по аналогии с рабочими пространствами
+                 (resources/views/livewire/workspace/show.blade.php). --}}
             <div>
                 <div class="bg-white rounded-xl shadow p-6 sticky top-6">
-                    <h2 class="text-lg font-semibold mb-4">Продавец</h2>
+                    <h2 class="text-lg font-semibold mb-4">
+                        {{ $listing->owner_type === 'agent' ? 'Агент' : ($listing->deal_type === 'rent' ? 'Арендодатель' : 'Продавец') }}
+                    </h2>
                     <div class="font-medium">{{ $listing->user->full_name }}</div>
                     <div class="text-sm text-gray-500">На сайте с {{ $listing->user->created_at->format('m.Y') }}</div>
+                    <div class="mt-2 text-xs inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                        {{ $listing->contact_type_label }}
+                    </div>
 
                     @auth
                         @if (auth()->id() !== $listing->user_id)
                             <x-primary-button type="button" wire:click="startChat" class="mt-4 w-full justify-center">
-                                Написать продавцу
+                                Написать
                             </x-primary-button>
                         @endif
                     @else

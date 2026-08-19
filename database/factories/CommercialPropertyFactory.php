@@ -31,6 +31,8 @@ class CommercialPropertyFactory extends Factory
             'heating_type' => fake()->randomElement(['central', 'autonomous', 'none']),
             'finishing_type' => fake()->randomElement(['none', 'rough', 'fine']),
             'furniture' => fake()->randomElement(['none', 'partial', 'full']),
+            'owner_type' => fake()->randomElement(['owner', 'agent']),
+            'contact_type' => fake()->randomElement(['calls_and_messages', 'messages_only']),
             'address' => fake()->address(),
             'metro_station' => fake()->optional()->streetName(),
             'metro_distance_min' => fake()->optional()->numberBetween(1, 30),

@@ -39,6 +39,8 @@ class ResidentialPropertyFactory extends Factory
             'commission' => fake()->optional()->numberBetween(5000, 50000),
             'rent_type' => $dealType === 'rent' ? fake()->randomElement(['direct', 'sublease']) : null,
             'utilities_included' => $dealType === 'rent' ? fake()->boolean() : false,
+            'owner_type' => fake()->randomElement(['owner', 'agent']),
+            'contact_type' => fake()->randomElement(['calls_and_messages', 'messages_only']),
             'description' => fake()->realText(200),
             'status' => 'active',
             'views_count' => fake()->numberBetween(0, 500),
