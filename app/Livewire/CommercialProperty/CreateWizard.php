@@ -44,6 +44,10 @@ class CreateWizard extends Component
 
     public ?float $lng = null;
 
+    public ?string $metroStation = null;
+
+    public ?int $metroDistanceMin = null;
+
     // Шаг 3
     public ?int $floor = null;
 
@@ -95,8 +99,17 @@ class CreateWizard extends Component
             $this->address = $commercialProperty->address;
             $this->lat = (float) $commercialProperty->lat;
             $this->lng = (float) $commercialProperty->lng;
+            $this->metroStation = $commercialProperty->metro_station;
+            $this->metroDistanceMin = $commercialProperty->metro_distance_min;
             $this->floor = $commercialProperty->floor;
-            $this->floorFeatures = $commercialProperty->floor_features ?? [];
+            // Санитизация устаревших значений (например, удалённого
+            // 'separate_entrance') — иначе повторная валидация при
+            // сохранении объявления упадёт (см. аналогичный паттерн в
+            // App\Livewire\Workspace\CreateWizard::mount()).
+            $this->floorFeatures = array_values(array_intersect(
+                $commercialProperty->floor_features ?? [],
+                array_keys(CommercialProperty::floorFeatureLabels())
+            ));
             $this->totalFloors = $commercialProperty->total_floors;
             $this->area = $commercialProperty->area;
             $this->ceilingHeight = $commercialProperty->ceiling_height ? (float) $commercialProperty->ceiling_height : null;
@@ -131,11 +144,13 @@ class CreateWizard extends Component
                 'address' => ['required', 'string', 'min:5', 'max:255'],
                 'lat' => ['required', 'numeric', 'between:-90,90'],
                 'lng' => ['required', 'numeric', 'between:-180,180'],
+                'metroStation' => ['nullable', 'string', 'max:255'],
+                'metroDistanceMin' => ['nullable', 'integer', 'min:0', 'max:180'],
             ],
             3 => [
                 'floor' => ['required', 'integer', 'min:1', 'max:200'],
                 'floorFeatures' => ['array'],
-                'floorFeatures.*' => ['string', 'in:separate_entrance,shop_window,high_traffic,parking,security'],
+                'floorFeatures.*' => ['string', 'in:shop_window,high_traffic,parking,security'],
                 'totalFloors' => ['required', 'integer', 'min:1', 'max:200', 'gte:floor'],
                 'area' => ['required', 'integer', 'min:1', 'max:100000'],
                 'ceilingHeight' => ['nullable', 'numeric', 'min:2', 'max:20'],
@@ -212,6 +227,8 @@ class CreateWizard extends Component
             'finishing_type' => $this->finishingType,
             'furniture' => $this->furniture,
             'address' => $this->address,
+            'metro_station' => $this->metroStation ?: null,
+            'metro_distance_min' => $this->metroDistanceMin,
             'lat' => $this->lat,
             'lng' => $this->lng,
             'description' => $this->description,

@@ -29,6 +29,8 @@ class CommercialProperty extends Model
         'finishing_type',
         'furniture',
         'address',
+        'metro_station',
+        'metro_distance_min',
         'lat',
         'lng',
         'description',
@@ -155,10 +157,17 @@ class CommercialProperty extends Model
         ];
     }
 
+    /**
+     * ИЗМЕНЕНО (по просьбе пользователя): особенность "Отдельный вход с
+     * улицы" убрана совсем — дублирует характеристику "Вход"
+     * (entrance_type, см. entranceTypeLabels()). Объявления, у которых это
+     * значение уже сохранено в floor_features (JSON), не ломаются — Show-
+     * страница и мастер защищены через array_intersect() с этим списком
+     * (см. аналогичную доработку для Workspace в App\Models\Workspace).
+     */
     public static function floorFeatureLabels(): array
     {
         return [
-            'separate_entrance' => 'Отдельный вход с улицы',
             'shop_window' => 'Витринные окна',
             'high_traffic' => 'Проходное место',
             'parking' => 'Парковка',

@@ -53,6 +53,17 @@
                             <dt class="text-gray-500">Этаж</dt>
                             <dd class="font-medium">{{ $listing->floor }} / {{ $listing->total_floors }}</dd>
                         </div>
+                        @if ($listing->metro_station)
+                            <div>
+                                <dt class="text-gray-500">Метро</dt>
+                                <dd class="font-medium">
+                                    {{ $listing->metro_station }}
+                                    @if ($listing->metro_distance_min)
+                                        · {{ $listing->metro_distance_min }} мин пешком
+                                    @endif
+                                </dd>
+                            </div>
+                        @endif
                         @if ($listing->ceiling_height)
                             <div>
                                 <dt class="text-gray-500">Высота потолков</dt>
@@ -89,11 +100,17 @@
                         </div>
                     </dl>
 
-                    @if (!empty($listing->floor_features))
+                    {{-- array_intersect отсекает значения, которых больше нет в
+                         CommercialProperty::floorFeatureLabels() (например,
+                         убранное по просьбе пользователя "Отдельный вход с
+                         улицы" — дублировало характеристику "Вход") — старые
+                         объявления с этим значением в БД не ломают показ. --}}
+                    @php($visibleFloorFeatures = array_intersect($listing->floor_features ?? [], array_keys($floorFeatureLabels)))
+                    @if (!empty($visibleFloorFeatures))
                         <div class="mt-4 flex flex-wrap gap-2">
-                            @foreach ($listing->floor_features as $feature)
+                            @foreach ($visibleFloorFeatures as $feature)
                                 <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
-                                    {{ $floorFeatureLabels[$feature] ?? $feature }}
+                                    {{ $floorFeatureLabels[$feature] }}
                                 </span>
                             @endforeach
                         </div>

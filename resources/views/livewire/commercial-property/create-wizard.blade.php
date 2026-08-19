@@ -87,6 +87,18 @@
                     <p class="text-xs text-gray-400">
                         Адрес, широта и долгота заполняются автоматически — выберите адрес из подсказок или кликните точку на карте ниже.
                     </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <x-input-label for="metroStation" value="Станция метро (необязательно)" />
+                            <x-text-input wire:model="metroStation" id="metroStation" type="text" class="mt-1 block w-full" />
+                            <x-input-error :messages="$errors->get('metroStation')" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="metroDistanceMin" value="Минут пешком до метро (необязательно)" />
+                            <x-text-input wire:model="metroDistanceMin" id="metroDistanceMin" type="number" class="mt-1 block w-full" />
+                            <x-input-error :messages="$errors->get('metroDistanceMin')" class="mt-2" />
+                        </div>
+                    </div>
                 </div>
             @endif
 
