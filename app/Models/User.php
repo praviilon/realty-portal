@@ -24,6 +24,17 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
     use HasFactory, Notifiable;
 
     /**
+     * Временный дефолтный пароль, на который администратор может сбросить
+     * пароль пользователя из админ-панели (эпик: управление пользователями).
+     * Это осознанное временное решение — на сервере нет реального почтового
+     * сервера, поэтому отправить пользователю ссылку для сброса пароля
+     * невозможно, и учётные данные приходится сообщать в обход e-mail.
+     * Значение подобрано так, чтобы проходить App\Rules\PasswordPolicy
+     * (6–60 символов, только латиница, обязательны строчные+заглавные+цифры).
+     */
+    public const DEFAULT_RESET_PASSWORD = 'ChangeMe123';
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -33,6 +44,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_login_at' => 'datetime',
         ];
     }
 
