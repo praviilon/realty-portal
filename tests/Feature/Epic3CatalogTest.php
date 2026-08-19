@@ -52,16 +52,50 @@ class Epic3CatalogTest extends TestCase
             ->assertViewHas('listings', fn ($listings) => $listings->total() === 1);
     }
 
+    /**
+     * Доработка по просьбе пользователя: фильтр по площади ("Площадь от/до")
+     * — по аналогии с рабочими пространствами и коммерческой недвижимостью.
+     */
+    public function test_catalog_filters_by_area_range(): void
+    {
+        ResidentialProperty::factory()->create(['deal_type' => 'sale', 'status' => 'active', 'area' => 30]);
+        ResidentialProperty::factory()->create(['deal_type' => 'sale', 'status' => 'active', 'area' => 100]);
+
+        Livewire::test(\App\Livewire\Catalog\Search::class)
+            ->set('areaMin', 50)
+            ->assertViewHas('listings', fn ($listings) => $listings->total() === 1);
+    }
+
+    /**
+     * Доработка по просьбе пользователя: чекбоксы по особенностям
+     * помещения ("Нет лифта") — по аналогии с рабочими пространствами.
+     */
+    public function test_catalog_filters_by_floor_feature(): void
+    {
+        ResidentialProperty::factory()->create(['deal_type' => 'sale', 'status' => 'active', 'floor_features' => ['no_elevator']]);
+        ResidentialProperty::factory()->create(['deal_type' => 'sale', 'status' => 'active', 'floor_features' => []]);
+
+        Livewire::test(\App\Livewire\Catalog\Search::class)
+            ->set('floorFeatures', ['no_elevator'])
+            ->assertViewHas('listings', fn ($listings) => $listings->total() === 1);
+    }
+
     public function test_reset_filters_clears_state(): void
     {
         Livewire::test(\App\Livewire\Catalog\Search::class)
             ->set('propertyType', 'house')
             ->set('priceMin', 100)
             ->set('priceMax', 200)
+            ->set('areaMin', 10)
+            ->set('areaMax', 50)
+            ->set('floorFeatures', ['no_elevator'])
             ->call('resetFilters')
             ->assertSet('propertyType', '')
             ->assertSet('priceMin', null)
-            ->assertSet('priceMax', null);
+            ->assertSet('priceMax', null)
+            ->assertSet('areaMin', null)
+            ->assertSet('areaMax', null)
+            ->assertSet('floorFeatures', []);
     }
 
     public function test_show_page_displays_active_listing(): void

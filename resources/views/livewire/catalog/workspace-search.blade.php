@@ -50,9 +50,9 @@
             </div>
 
             <div class="flex flex-wrap gap-3 mt-4 pt-4 border-t">
-                @foreach ($amenityLabels as $value => $label)
+                @foreach ($floorFeatureLabels as $value => $label)
                     <label class="inline-flex items-center gap-1.5 text-sm text-gray-700">
-                        <input type="checkbox" wire:model.live="amenities" value="{{ $value }}" class="rounded border-gray-300">
+                        <input type="checkbox" wire:model.live="floorFeatures" value="{{ $value }}" class="rounded border-gray-300">
                         {{ $label }}
                     </label>
                 @endforeach

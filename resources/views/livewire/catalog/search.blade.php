@@ -33,10 +33,27 @@
                     <input type="number" wire:model.live.debounce.500ms="priceMax" class="rounded-lg border-gray-300 w-32 text-sm">
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Площадь от, м²</label>
+                    <input type="number" wire:model.live.debounce.500ms="areaMin" class="rounded-lg border-gray-300 w-24 text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Площадь до, м²</label>
+                    <input type="number" wire:model.live.debounce.500ms="areaMax" class="rounded-lg border-gray-300 w-24 text-sm">
+                </div>
+                <div>
                     <button type="button" wire:click="resetFilters" class="text-sm text-gray-500 hover:text-gray-800 underline">
                         Сбросить фильтры
                     </button>
                 </div>
+            </div>
+
+            <div class="flex flex-wrap gap-3 mt-4 pt-4 border-t">
+                @foreach ($floorFeatureLabels as $value => $label)
+                    <label class="inline-flex items-center gap-1.5 text-sm text-gray-700">
+                        <input type="checkbox" wire:model.live="floorFeatures" value="{{ $value }}" class="rounded border-gray-300">
+                        {{ $label }}
+                    </label>
+                @endforeach
             </div>
         </div>
 

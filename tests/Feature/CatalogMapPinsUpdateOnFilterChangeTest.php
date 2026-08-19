@@ -77,6 +77,37 @@ class CatalogMapPinsUpdateOnFilterChangeTest extends TestCase
             });
     }
 
+    /**
+     * Доработка по просьбе пользователя: новые фильтры (площадь,
+     * особенности помещения) тоже должны обновлять пины на карте сразу,
+     * как и уже существовавшие.
+     */
+    public function test_residential_pins_updated_event_reflects_area_filter_change(): void
+    {
+        $small = ResidentialProperty::factory()->create(['deal_type' => 'sale', 'status' => 'active', 'area' => 30]);
+        $large = ResidentialProperty::factory()->create(['deal_type' => 'sale', 'status' => 'active', 'area' => 100]);
+
+        Livewire::test(Search::class)
+            ->set('view', 'map')
+            ->set('areaMin', 50)
+            ->assertDispatched('catalog:pins-updated', function (string $name, array $params) use ($large) {
+                return count($params['pins']) === 1 && $params['pins'][0]['id'] === $large->id;
+            });
+    }
+
+    public function test_residential_pins_updated_event_reflects_floor_feature_filter_change(): void
+    {
+        $withFeature = ResidentialProperty::factory()->create(['deal_type' => 'sale', 'status' => 'active', 'floor_features' => ['no_elevator']]);
+        $withoutFeature = ResidentialProperty::factory()->create(['deal_type' => 'sale', 'status' => 'active', 'floor_features' => []]);
+
+        Livewire::test(Search::class)
+            ->set('view', 'map')
+            ->set('floorFeatures', ['no_elevator'])
+            ->assertDispatched('catalog:pins-updated', function (string $name, array $params) use ($withFeature) {
+                return count($params['pins']) === 1 && $params['pins'][0]['id'] === $withFeature->id;
+            });
+    }
+
     // --- Коммерческая недвижимость ---
 
     public function test_commercial_pins_updated_event_reflects_deal_type_filter_change(): void
@@ -109,6 +140,54 @@ class CatalogMapPinsUpdateOnFilterChangeTest extends TestCase
             ->set('purposeType', 'retail')
             ->assertDispatched('catalog:pins-updated', function (string $name, array $params) use ($retail) {
                 return count($params['pins']) === 1 && $params['pins'][0]['id'] === $retail->id;
+            });
+    }
+
+    public function test_commercial_pins_updated_event_reflects_building_type_filter_change(): void
+    {
+        $businessCenter = CommercialProperty::factory()->create(['deal_type' => 'sale', 'status' => 'active', 'building_type' => 'business_center']);
+        CommercialSaleDetail::factory()->create(['property_id' => $businessCenter->id]);
+        $shoppingCenter = CommercialProperty::factory()->create(['deal_type' => 'sale', 'status' => 'active', 'building_type' => 'shopping_center']);
+        CommercialSaleDetail::factory()->create(['property_id' => $shoppingCenter->id]);
+
+        Livewire::test(CommercialSearch::class)
+            ->set('view', 'map')
+            ->set('dealType', 'sale')
+            ->set('buildingType', 'business_center')
+            ->assertDispatched('catalog:pins-updated', function (string $name, array $params) use ($businessCenter) {
+                return count($params['pins']) === 1 && $params['pins'][0]['id'] === $businessCenter->id;
+            });
+    }
+
+    public function test_commercial_pins_updated_event_reflects_area_filter_change(): void
+    {
+        $small = CommercialProperty::factory()->create(['deal_type' => 'sale', 'status' => 'active', 'area' => 50]);
+        CommercialSaleDetail::factory()->create(['property_id' => $small->id]);
+        $large = CommercialProperty::factory()->create(['deal_type' => 'sale', 'status' => 'active', 'area' => 500]);
+        CommercialSaleDetail::factory()->create(['property_id' => $large->id]);
+
+        Livewire::test(CommercialSearch::class)
+            ->set('view', 'map')
+            ->set('dealType', 'sale')
+            ->set('areaMin', 200)
+            ->assertDispatched('catalog:pins-updated', function (string $name, array $params) use ($large) {
+                return count($params['pins']) === 1 && $params['pins'][0]['id'] === $large->id;
+            });
+    }
+
+    public function test_commercial_pins_updated_event_reflects_floor_feature_filter_change(): void
+    {
+        $withParking = CommercialProperty::factory()->create(['deal_type' => 'sale', 'status' => 'active', 'floor_features' => ['parking']]);
+        CommercialSaleDetail::factory()->create(['property_id' => $withParking->id]);
+        $withoutParking = CommercialProperty::factory()->create(['deal_type' => 'sale', 'status' => 'active', 'floor_features' => ['security']]);
+        CommercialSaleDetail::factory()->create(['property_id' => $withoutParking->id]);
+
+        Livewire::test(CommercialSearch::class)
+            ->set('view', 'map')
+            ->set('dealType', 'sale')
+            ->set('floorFeatures', ['parking'])
+            ->assertDispatched('catalog:pins-updated', function (string $name, array $params) use ($withParking) {
+                return count($params['pins']) === 1 && $params['pins'][0]['id'] === $withParking->id;
             });
     }
 
@@ -145,6 +224,26 @@ class CatalogMapPinsUpdateOnFilterChangeTest extends TestCase
             ->set('priceMin', 3000)
             ->assertDispatched('catalog:pins-updated', function (string $name, array $params) use ($expensive) {
                 return count($params['pins']) === 1 && $params['pins'][0]['id'] === $expensive->id;
+            });
+    }
+
+    /**
+     * Доработка по просьбе пользователя: чекбоксы поиска по удобствам
+     * заменены на чекбоксы по особенностям помещения — новый фильтр тоже
+     * должен обновлять пины на карте.
+     */
+    public function test_workspace_pins_updated_event_reflects_floor_feature_filter_change(): void
+    {
+        $withParking = Workspace::factory()->create(['status' => 'active', 'floor_features' => ['parking']]);
+        WorkspacePricing::factory()->create(['workspace_id' => $withParking->id, 'period' => 'day', 'price' => 2000]);
+        $withoutParking = Workspace::factory()->create(['status' => 'active', 'floor_features' => ['reception']]);
+        WorkspacePricing::factory()->create(['workspace_id' => $withoutParking->id, 'period' => 'day', 'price' => 2000]);
+
+        Livewire::test(WorkspaceSearch::class)
+            ->set('view', 'map')
+            ->set('floorFeatures', ['parking'])
+            ->assertDispatched('catalog:pins-updated', function (string $name, array $params) use ($withParking) {
+                return count($params['pins']) === 1 && $params['pins'][0]['id'] === $withParking->id;
             });
     }
 

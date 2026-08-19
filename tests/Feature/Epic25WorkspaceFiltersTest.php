@@ -82,18 +82,23 @@ class Epic25WorkspaceFiltersTest extends TestCase
             ->assertDontSee($small->address);
     }
 
-    public function test_filters_by_amenity(): void
+    /**
+     * Доработка по просьбе пользователя: чекбоксы поиска по удобствам
+     * (Wi-Fi, кофе и т.д.) заменены на чекбоксы по особенностям помещения
+     * (Парковка, Охрана/видеонаблюдение, Ресепшн).
+     */
+    public function test_filters_by_floor_feature(): void
     {
-        $withWifi = Workspace::factory()->create(['status' => 'active', 'amenities' => ['wifi', 'coffee']]);
-        WorkspacePricing::factory()->create(['workspace_id' => $withWifi->id, 'period' => 'day', 'price' => 2000]);
+        $withParking = Workspace::factory()->create(['status' => 'active', 'floor_features' => ['parking', 'security']]);
+        WorkspacePricing::factory()->create(['workspace_id' => $withParking->id, 'period' => 'day', 'price' => 2000]);
 
-        $withoutWifi = Workspace::factory()->create(['status' => 'active', 'amenities' => ['printer']]);
-        WorkspacePricing::factory()->create(['workspace_id' => $withoutWifi->id, 'period' => 'day', 'price' => 2000]);
+        $withoutParking = Workspace::factory()->create(['status' => 'active', 'floor_features' => ['reception']]);
+        WorkspacePricing::factory()->create(['workspace_id' => $withoutParking->id, 'period' => 'day', 'price' => 2000]);
 
         Livewire::test(WorkspaceSearch::class)
-            ->set('amenities', ['wifi'])
-            ->assertSee($withWifi->address)
-            ->assertDontSee($withoutWifi->address);
+            ->set('floorFeatures', ['parking'])
+            ->assertSee($withParking->address)
+            ->assertDontSee($withoutParking->address);
     }
 
     public function test_reset_filters_clears_all_criteria(): void
@@ -104,14 +109,14 @@ class Epic25WorkspaceFiltersTest extends TestCase
             ->set('priceMax', 5000)
             ->set('areaMin', 10)
             ->set('areaMax', 50)
-            ->set('amenities', ['wifi'])
+            ->set('floorFeatures', ['parking'])
             ->call('resetFilters')
             ->assertSet('workspaceType', '')
             ->assertSet('priceMin', null)
             ->assertSet('priceMax', null)
             ->assertSet('areaMin', null)
             ->assertSet('areaMax', null)
-            ->assertSet('amenities', []);
+            ->assertSet('floorFeatures', []);
     }
 
     public function test_catalog_page_loads(): void

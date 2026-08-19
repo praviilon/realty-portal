@@ -30,24 +30,43 @@ class CommercialSearch extends Component
     public string $purposeType = ''; // '' | office | retail | warehouse | free
 
     #[Url]
+    public string $buildingType = ''; // '' | administrative | business_center | residential | shopping_center
+
+    #[Url]
     public ?int $priceMin = null;
 
     #[Url]
     public ?int $priceMax = null;
 
     #[Url]
+    public ?int $areaMin = null;
+
+    #[Url]
+    public ?int $areaMax = null;
+
+    /**
+     * Чекбоксы по особенностям помещения — по аналогии с рабочими
+     * пространствами (см. App\Livewire\Catalog\WorkspaceSearch), см.
+     * CommercialProperty::floorFeatureLabels().
+     *
+     * @var array<int, string>
+     */
+    #[Url]
+    public array $floorFeatures = [];
+
+    #[Url]
     public string $view = 'list'; // list | map
 
     public function updated($property): void
     {
-        if (in_array($property, ['dealType', 'purposeType', 'priceMin', 'priceMax'])) {
+        if (in_array($property, ['dealType', 'purposeType', 'buildingType', 'priceMin', 'priceMax', 'areaMin', 'areaMax']) || str_starts_with((string) $property, 'floorFeatures')) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['purposeType', 'priceMin', 'priceMax']);
+        $this->reset(['purposeType', 'buildingType', 'priceMin', 'priceMax', 'areaMin', 'areaMax', 'floorFeatures']);
         $this->resetPage();
     }
 
@@ -67,12 +86,20 @@ class CommercialSearch extends Component
             ->with(['saleDetail', 'rentDetail'])
             ->where('deal_type', $this->dealType)
             ->when($this->purposeType, fn ($q) => $q->where('purpose_type', $this->purposeType))
+            ->when($this->buildingType, fn ($q) => $q->where('building_type', $this->buildingType))
             ->when($this->priceMin || $this->priceMax, fn ($q) => $q->whereHas(
                 $relation,
                 fn ($detail) => $detail
                     ->when($this->priceMin, fn ($d) => $d->where($column, '>=', $this->priceMin))
                     ->when($this->priceMax, fn ($d) => $d->where($column, '<=', $this->priceMax))
-            ));
+            ))
+            ->when($this->areaMin, fn ($q) => $q->where('area', '>=', $this->areaMin))
+            ->when($this->areaMax, fn ($q) => $q->where('area', '<=', $this->areaMax))
+            ->when(! empty($this->floorFeatures), function ($q) {
+                foreach ($this->floorFeatures as $feature) {
+                    $q->whereJsonContains('floor_features', $feature);
+                }
+            });
 
         if (count($this->areaPolygon) >= 3) {
             $query = $this->applyAreaFilter($query);
@@ -112,6 +139,8 @@ class CommercialSearch extends Component
             'listings' => $listings,
             'pins' => $pins,
             'purposeTypeLabels' => CommercialProperty::purposeTypeLabels(),
+            'buildingTypeLabels' => CommercialProperty::buildingTypeLabels(),
+            'floorFeatureLabels' => CommercialProperty::floorFeatureLabels(),
         ]);
     }
 }

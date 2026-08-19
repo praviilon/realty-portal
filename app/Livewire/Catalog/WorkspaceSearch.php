@@ -48,23 +48,30 @@ class WorkspaceSearch extends Component
     #[Url]
     public ?int $areaMax = null;
 
-    /** @var array<int, string> */
+    /**
+     * ИЗМЕНЕНО (по просьбе пользователя): чекбоксы поиска по удобствам
+     * (Wi-Fi, кофе и т.д.) заменены на чекбоксы по особенностям помещения
+     * (Парковка, Охрана/видеонаблюдение, Ресепшн) — тот же набор значений,
+     * что и на карточке объявления, см. Workspace::floorFeatureLabels().
+     *
+     * @var array<int, string>
+     */
     #[Url]
-    public array $amenities = [];
+    public array $floorFeatures = [];
 
     #[Url]
     public string $view = 'list'; // list | map
 
     public function updated($property): void
     {
-        if (in_array($property, ['workspaceType', 'period', 'priceMin', 'priceMax', 'areaMin', 'areaMax']) || str_starts_with((string) $property, 'amenities')) {
+        if (in_array($property, ['workspaceType', 'period', 'priceMin', 'priceMax', 'areaMin', 'areaMax']) || str_starts_with((string) $property, 'floorFeatures')) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['workspaceType', 'priceMin', 'priceMax', 'areaMin', 'areaMax', 'amenities']);
+        $this->reset(['workspaceType', 'priceMin', 'priceMax', 'areaMin', 'areaMax', 'floorFeatures']);
         $this->period = 'day';
         $this->resetPage();
     }
@@ -83,9 +90,9 @@ class WorkspaceSearch extends Component
             ))
             ->when($this->areaMin, fn ($q) => $q->where('area', '>=', $this->areaMin))
             ->when($this->areaMax, fn ($q) => $q->where('area', '<=', $this->areaMax))
-            ->when(! empty($this->amenities), function ($q) {
-                foreach ($this->amenities as $amenity) {
-                    $q->whereJsonContains('amenities', $amenity);
+            ->when(! empty($this->floorFeatures), function ($q) {
+                foreach ($this->floorFeatures as $feature) {
+                    $q->whereJsonContains('floor_features', $feature);
                 }
             });
 
@@ -127,7 +134,7 @@ class WorkspaceSearch extends Component
             'listings' => $listings,
             'pins' => $pins,
             'workspaceTypeLabels' => Workspace::workspaceTypeLabels(),
-            'amenityLabels' => Workspace::amenityLabels(),
+            'floorFeatureLabels' => Workspace::floorFeatureLabels(),
             'periodLabels' => Workspace::pricingPeriodLabels(),
         ]);
     }

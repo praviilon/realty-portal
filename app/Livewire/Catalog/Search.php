@@ -28,6 +28,23 @@ class Search extends Component
     public ?int $priceMax = null;
 
     #[Url]
+    public ?int $areaMin = null;
+
+    #[Url]
+    public ?int $areaMax = null;
+
+    /**
+     * Чекбоксы по особенностям помещения — по аналогии с рабочими
+     * пространствами (см. App\Livewire\Catalog\WorkspaceSearch). У жилой
+     * недвижимости пока единственная особенность — "Нет лифта", см.
+     * ResidentialProperty::floorFeatureLabels().
+     *
+     * @var array<int, string>
+     */
+    #[Url]
+    public array $floorFeatures = [];
+
+    #[Url]
     public string $view = 'list'; // list | map
 
     /**
@@ -39,14 +56,14 @@ class Search extends Component
 
     public function updated($property): void
     {
-        if (in_array($property, ['dealType', 'propertyType', 'priceMin', 'priceMax'])) {
+        if (in_array($property, ['dealType', 'propertyType', 'priceMin', 'priceMax', 'areaMin', 'areaMax']) || str_starts_with((string) $property, 'floorFeatures')) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['propertyType', 'priceMin', 'priceMax']);
+        $this->reset(['propertyType', 'priceMin', 'priceMax', 'areaMin', 'areaMax', 'floorFeatures']);
         $this->resetPage();
     }
 
@@ -73,7 +90,14 @@ class Search extends Component
             ->where('deal_type', $this->dealType)
             ->when($this->propertyType, fn ($q) => $q->where('property_type', $this->propertyType))
             ->when($this->priceMin, fn ($q) => $q->where('price', '>=', $this->priceMin))
-            ->when($this->priceMax, fn ($q) => $q->where('price', '<=', $this->priceMax));
+            ->when($this->priceMax, fn ($q) => $q->where('price', '<=', $this->priceMax))
+            ->when($this->areaMin, fn ($q) => $q->where('area', '>=', $this->areaMin))
+            ->when($this->areaMax, fn ($q) => $q->where('area', '<=', $this->areaMax))
+            ->when(! empty($this->floorFeatures), function ($q) {
+                foreach ($this->floorFeatures as $feature) {
+                    $q->whereJsonContains('floor_features', $feature);
+                }
+            });
 
         if (count($this->areaPolygon) >= 3) {
             $query = $this->applyAreaFilter($query);
@@ -175,6 +199,7 @@ class Search extends Component
             'listings' => $listings,
             'pins' => $pins,
             'propertyTypeLabels' => ResidentialProperty::propertyTypeLabels(),
+            'floorFeatureLabels' => ResidentialProperty::floorFeatureLabels(),
         ]);
     }
 }
